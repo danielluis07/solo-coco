@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Letreiro skin. Values from DESIGN.md § Brand core and § Visual direction. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bowlby-one);
+  --font-sans: var(--font-figtree);
+
+  /* Base palette */
+  --color-casca: #7ba23f;
+  --color-casca-funda: #4e7a1f;
+  --color-polpa: #fafaf5;
+  --color-fibra: #3a2a1d;
+  --color-letreiro: #d7261e;
+  --color-isopor: #dce6ea;
+
+  /* Flavour accents: fills only. Só o Coco uses Casca. */
+  --color-flavour-so-o-coco: #7ba23f;
+  --color-flavour-maracuja: #f2b628;
+  --color-flavour-caju: #e8662a;
+  --color-flavour-acai: #5b2a6e;
+  --color-flavour-limao: #b5cc3a;
+  --color-flavour-goiaba: #ee8fa0;
+
+  /* Hard, offset painted drop shadow; never blurred. */
+  --shadow-board: 3px 4px 0 #3a2a1d;
+  --shadow-board-sm: 2px 3px 0 #3a2a1d;
+
+  /* Uneven corners, as if the board was cut by hand. */
+  --radius-board: 18px 10px 16px 8px;
+  --radius-board-alt: 10px 16px 8px 18px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Painted-board grain: fractal noise at about 9% Fibra. */
+@utility bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.23 0 0 0 0 0.16 0 0 0 0 0.11 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The same grain in Polpa, so it shows on the dark Fibra section. */
+@utility bg-grain-dark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.98 0 0 0 0 0.98 0 0 0 0 0.96 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@layer base {
+  body {
+    @apply bg-polpa bg-grain font-sans text-fibra;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  :focus-visible {
+    @apply outline-3 outline-offset-2 outline-letreiro;
+  }
 }

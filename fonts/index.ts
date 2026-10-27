@@ -1,11 +1,13 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bowlby_One, Figtree } from "next/font/google";
 
-export const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display face. Google ships the latin subset only; it covers ã ç õ é.
+export const bowlbyOne = Bowlby_One({
+  variable: "--font-bowlby-one",
+  weight: "400",
   subsets: ["latin"],
 });
 
-export const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+export const figtree = Figtree({
+  variable: "--font-figtree",
+  subsets: ["latin", "latin-ext"],
 });
