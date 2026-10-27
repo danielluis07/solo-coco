@@ -1,7 +1,19 @@
+import { FlavourGrid } from "@/components/flavour-grid";
+import { Hero } from "@/components/hero";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { Statement } from "@/components/statement";
+
 export default function Home() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-    </div>
+    <>
+      <SiteHeader />
+      <main>
+        <Hero />
+        <Statement />
+        <FlavourGrid />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
