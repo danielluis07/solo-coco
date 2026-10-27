@@ -10,6 +10,14 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* DESIGN.md base palette */
+  --color-casca: #7ba23f;
+  --color-casca-funda: #4e7a1f;
+  --color-polpa: #fafaf5;
+  --color-fibra: #3a2a1d;
+  --color-letreiro: #d7261e;
+  --color-isopor: #dce6ea;
 }
 
 @media (prefers-color-scheme: dark) {
