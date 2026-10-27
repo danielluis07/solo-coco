@@ -39,11 +39,22 @@ export function HeroLayers({
   );
 }
 
-export function Badge({ children, className = "", anchor }: { children: ReactNode; className?: string; anchor?: number }) {
+export function Badge({
+  children,
+  className = "",
+  anchor,
+  small,
+}: {
+  children: ReactNode;
+  className?: string;
+  anchor?: number;
+  /** Phone size. */
+  small?: boolean;
+}) {
   return (
     <div
       data-anchor={anchor}
-      className={`absolute grid size-36 place-items-center rounded-full bg-casca p-5 text-center font-display text-base leading-tight text-fibra shadow-[3px_4px_0_var(--color-fibra)] ${className}`}>
+      className={`absolute grid place-items-center rounded-full bg-casca text-center font-display leading-tight text-fibra shadow-[3px_4px_0_var(--color-fibra)] ${small ? "size-26 p-3 text-[13px]" : "size-36 p-5 text-base"} ${className}`}>
       {children}
     </div>
   );

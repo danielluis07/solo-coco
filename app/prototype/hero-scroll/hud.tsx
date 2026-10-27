@@ -18,13 +18,14 @@ type Props = {
 const f = (n: number) => n.toFixed(2).padStart(5);
 
 export function Hud({ beats, total, timeline, rig, extra }: Props) {
-  const [open, setOpen] = useState(true);
+  // null: the default, open on desktop and hidden at phone width where it would cover the hero.
+  const [open, setOpen] = useState<boolean | null>(null);
   const text = useRef<HTMLPreElement>(null);
   const marker = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "h") setOpen((o) => !o);
+      if (e.key === "h") setOpen((o) => !(o ?? window.innerWidth >= 640));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -63,7 +64,7 @@ export function Hud({ beats, total, timeline, rig, extra }: Props) {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 w-96 rounded-xl bg-black/85 p-3 font-mono text-[11px] text-white ring-2 ring-fuchsia-500 ${open ? "" : "hidden"}`}>
+      className={`fixed top-4 right-4 z-50 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl bg-black/85 p-3 font-mono text-[11px] text-white ring-2 ring-fuchsia-500 ${open === null ? "max-sm:hidden" : open ? "" : "hidden"}`}>
       <div className="relative mb-2 flex h-6 overflow-hidden rounded">
         {beats.map((b, i) => (
           <div

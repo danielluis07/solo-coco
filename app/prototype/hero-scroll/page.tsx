@@ -1,5 +1,6 @@
 // PROTOTYPE: throwaway hero choreography for "How does the hero scroll sequence move?" (#8).
-// Three choreographies of the same beats on one route, switchable via ?variant=A|B|C.
+// Variant A is the chosen desktop Vitrine; P1-P3 are its phone takes for "How does the hero behave
+// on phones?" (#11), switchable via ?variant=A|P1|P2|P3. Judge them at /prototype/hero-scroll/phone.
 // Lives on the prototype/hero-scroll branch only; never merged to main.
 import { Suspense } from "react";
 import { heroFonts } from "./fonts";

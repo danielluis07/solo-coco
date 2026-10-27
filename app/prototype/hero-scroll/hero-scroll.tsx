@@ -6,13 +6,17 @@ import { useEffect } from "react";
 import { PrototypeSwitcher } from "@/components/prototype-switcher";
 import { gsap, ScrollTrigger } from "./gsap";
 import * as A from "./variant-a";
-import * as B from "./variant-b";
-import * as C from "./variant-c";
+import * as P1 from "./variant-p1";
+import * as P2 from "./variant-p2";
+import * as P3 from "./variant-p3";
 
 const variants = [
   { key: "A", name: A.name, Component: A.VariantA },
-  { key: "B", name: B.name, Component: B.VariantB },
-  { key: "C", name: C.name, Component: C.VariantC },
+  // Phone variants for "How does the hero behave on phones?" (#11). B and C lost in #8 and stay in
+  // the history of this branch.
+  { key: "P1", name: P1.name, Component: P1.VariantP1 },
+  { key: "P2", name: P2.name, Component: P2.VariantP2 },
+  { key: "P3", name: P3.name, Component: P3.VariantP3 },
 ];
 
 export function HeroScroll() {
