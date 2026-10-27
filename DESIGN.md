@@ -70,3 +70,31 @@ Starting values; the style tile tunes exact hexes and checks contrast. Flavour c
 ### Motion personality
 
 **Unhurried.** Long eases, no bounce or springy overshoot. One sharp beat only: the machete-crack. The hero choreography designs the specific moves within this rule.
+
+## Flavour lineup
+
+Decided in [What is the Flavour lineup?](https://github.com/danielluis07/solo-coco/issues/5).
+
+Six Flavours: the plain coconut one and five fruit ones. Each is named by the fruit alone; no invented product names. In Copy, "SoloCoco Maracujá" on first mention, then "Maracujá".
+
+| Flavour   | Accent    | kcal / 350 ml | Açúcar |
+|-----------|-----------|---------------|--------|
+| Só o Coco | Polpa label on Casca (no new colour) | 35 | 3 g |
+| Maracujá  | `#F2B628` | 48 | 6 g |
+| Caju      | `#E8662A` | 50 | 6 g |
+| Açaí      | `#5B2A6E` | 52 | 7 g |
+| Limão     | `#B5CC3A` | 42 | 4 g |
+| Goiaba    | `#EE8FA0` | 55 | 7 g |
+
+- **Accent colours** are starting values for the label, the card wash and the hover state; the style tile tunes them and checks contrast. Limão stays cooler and yellower than Casca; Goiaba stays soft pink, well away from Letreiro.
+- **Can**: one size, 350 ml. The hero can is Só o Coco; the fruit Flavours first appear in the grid.
+- **Quick-add**: the same prices for every Flavour. Decorative only.
+
+  | Pack     | Price     |
+  |----------|-----------|
+  | 1 lata   | R$ 6,90   |
+  | 6 latas  | R$ 37,90  |
+  | 12 latas | R$ 69,90  |
+
+- **Hero badges**: three shared across all Flavours, deadpan, no wellness claims: "Só 3 ingredientes", "Levemente gaseificado", "Estupidamente gelado".
+- **Card stats**: kcal and açúcar on every Flavour card, plus a one-line descriptor in the brand voice. The descriptors are written in the Copy ticket.
