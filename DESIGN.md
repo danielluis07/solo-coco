@@ -298,6 +298,35 @@ Six Flavours: the plain coconut one and five fruit ones. Each is named by the fr
 - **Hero badges**: three shared across all Flavours, deadpan, no wellness claims: "Só 3 ingredientes", "Levemente gaseificado", "Estupidamente gelado".
 - **Card stats**: kcal and açúcar on every Flavour card, plus a one-line descriptor in the brand voice. The descriptors are written in the Copy ticket.
 
+## Can label: Barraca
+
+Decided in [What does each Flavour's can label look like?](https://github.com/danielluis07/solo-coco/issues/10). The prototype is on the throwaway branch `prototype/can-label` (variant B); its `label-b.tsx` is the reference layout.
+
+### Strip
+
+- One label image per Flavour, drawn as flat art for the can's single UV strip (ADR 0002): **2048 × 1024**, about the 2:1 wrap of a 350 ml can.
+- **Seam on the can's left side** (u = 0 = 1). Front panel centred at u = 0.25, back panel at u = 0.75, so neither the front nor the back shown in "Lata gira" crosses the seam. Each panel reads face-on about ±320 px around its centre.
+- The painted-board grain is baked into the texture.
+
+### Shared system
+
+- **Husk**: the top two-thirds of every can is Casca, so the six read as one family and coconut always leads.
+- **Flavour band**: the bottom third is the Flavour accent, its top edge a jagged machete cut with a Fibra outline that wraps the whole can and meets itself at the seam. Só o Coco's band is Polpa ("Polpa label on Casca").
+- **Front**: the symbol and the wordmark in Fibra on the husk (Fibra on Casca, 4.6), "Levemente gaseificado" under it; a Polpa roundel with the painted fruit sits across the cut; the Flavour name in Bowlby One on the band, in the Flavour's text colour (§ Visual direction); "350 ml" below.
+- **Side**: a smaller painted fruit on the band at u = 0.5.
+- **Back**: "Só o coco.", the ingredients, and kcal and açúcar per can in Fibra on the husk; "350 ml" and a sign-off on the band. The wording is written in the Copy ticket.
+- Wordmark and Flavour name stay inside the front panel: Bowlby One sets about 0.72 em a glyph.
+
+### Fruit art
+
+- **One painted fruit per Flavour**, on the front roundel and repeated small on the side. Só o Coco gets a coconut half.
+- **Style**: the fruit on a juice-stand menu board. Flat fills, a thick Fibra outline, one highlight stroke, cut fruit shown in section where it reads better (maracujá, limão, goiaba), whole where the shape is the point (caju with its nut, an açaí cluster).
+- **Source**: paid-tier AI images we own the output of (ADR 0002), used as reference and repainted flat to the style above, so the six match.
+
+### Known refinement
+
+The symbol drawn in Fibra on the Casca husk reads as a dark ball at grid size. Its on-husk treatment is refined when the label art is drawn.
+
 ## SEO, sharing preview and favicon
 
 Approved in [What are the SEO metadata, sharing preview, and favicon?](https://github.com/danielluis07/solo-coco/issues/17#issuecomment-6455094227).
