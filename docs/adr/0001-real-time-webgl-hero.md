@@ -8,11 +8,11 @@ The target is a **noise-dissolve crossfade** between the coconut and can meshes.
 
 ## Animation scope
 
-GSAP is the only JS animation library. It handles every scroll-linked moment, including the rotating highlighted word. Tailwind/CSS transitions handle hover and UI state (Flavour card hover, Quick-add). A reduced-motion / low-end fallback exists (a poster, possibly an image sequence), but it is specified separately.
+GSAP is the only JS animation library. It handles every scroll-linked moment, including the rotating highlighted word. Tailwind/CSS transitions handle hover and UI state (Flavour card hover, Quick-add). Runtime tiers, budgets, loading and failure behavior are specified in `DESIGN.md` under Performance, loading and runtime fallbacks: Full, Lite (scale-swap), and Static (poster with normal page flow). No image-sequence fallback is used. The Accessibility section in `DESIGN.md` requires Static for reduced motion or the visitor's “Desativar animações” choice, disabling pinning, Lenis and decorative movement across the page.
 
 ## Considered Options
 
-- **Pre-rendered image sequence as the main renderer**: 6–12 MB+, heavy on iOS memory, not interactive. Kept only as a possible fallback.
+- **Pre-rendered image sequence as the main renderer**: 6–12 MB+, heavy on iOS memory, not interactive. Subsequently ruled out as a fallback in [What are the performance budgets, loading strategy, and failure fallbacks?](https://github.com/danielluis07/solo-coco/issues/14); Static uses a poster instead.
 - **Spline**: about 280 KB runtime, its states play as timed transitions rather than scroll scrubbing, and it gives no shader control for the transformation.
 - **drei `ScrollControls`**: its own scroll container fights the normal page sections below the hero.
 - **Motion (`useScroll`)**: weaker pin and scrub control for one long choreographed timeline, and it would be a second animation library.
