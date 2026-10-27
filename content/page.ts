@@ -181,6 +181,11 @@ export const seo = {
     "Bebida de coco levemente gaseificada, com seis sabores e jeito de barraca. SoloCoco é uma marca fictícia. Nenhuma compra é realizada.",
   siteName: brand,
   locale: "pt_BR",
+  type: "website",
+  card: "summary_large_image",
+  image: "/sharing-image.png",
+  imageWidth: 1200,
+  imageHeight: 630,
   imageAlt:
     "SoloCoco — Só o coco. Lata do sabor Só o Coco sobre fundo claro, com sombra marrom. Marca fictícia.",
 } as const;

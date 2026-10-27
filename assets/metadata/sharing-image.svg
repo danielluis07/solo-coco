@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Editable placeholder; replace the exported PNG when approved artwork arrives. -->
+  <defs>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 .227 0 0 0 0 .165 0 0 0 0 .114 0 0 0 .09 0"/><feBlend in="SourceGraphic" mode="multiply"/></filter>
+    <clipPath id="label"><rect x="810" y="103" width="224" height="432" rx="32"/></clipPath>
+  </defs>
+  <path fill="#FAFAF5" filter="url(#grain)" d="M0 0h1200v630H0z"/>
+  <g fill="#3A2A1D" font-family="Arial, sans-serif">
+    <text x="76" y="266" font-weight="900" font-size="88" letter-spacing="-5" transform="rotate(-2 76 266)">SoloCoco</text>
+    <text x="80" y="349" font-weight="700" font-size="54">Só o coco.</text>
+    <text x="80" y="548" font-size="26">Marca fictícia.</text>
+  </g>
+  <g transform="rotate(7 922 315)">
+    <rect x="826" y="119" width="224" height="432" rx="32" fill="#3A2A1D"/>
+    <rect x="810" y="103" width="224" height="432" rx="32" fill="#DCE6EA" stroke="#3A2A1D" stroke-width="5"/>
+    <g clip-path="url(#label)">
+      <path fill="#7BA23F" d="M810 143h224v350H810z"/>
+      <path fill="#FAFAF5" stroke="#3A2A1D" stroke-width="4" d="m810 387 41-13 38 11 50-14 49 12 46-15v136H810z"/>
+    </g>
+    <ellipse cx="922" cy="121" rx="87" ry="11" fill="#FAFAF5" stroke="#3A2A1D" stroke-width="3"/>
+    <ellipse cx="922" cy="122" rx="24" ry="5" fill="#3A2A1D"/>
+    <path fill="#3A2A1D" d="M924 178 967 209A49 49 0 1 1 924 178Z"/>
+    <g fill="#3A2A1D" font-family="Arial, sans-serif" text-anchor="middle">
+      <text x="922" y="295" font-size="35" font-weight="900" letter-spacing="-2">SoloCoco</text>
+      <text x="922" y="322" font-size="16">Levemente gaseificado</text>
+      <text x="922" y="441" font-size="31" font-weight="900">Só o Coco</text>
+      <text x="922" y="476" font-size="21">350 ml</text>
+    </g>
+    <circle cx="922" cy="372" r="29" fill="#FAFAF5" stroke="#3A2A1D" stroke-width="4"/>
+    <path d="M902 370a20 20 0 0 0 40 0Z" fill="#3A2A1D"/>
+    <ellipse cx="922" cy="370" rx="20" ry="6" fill="#FAFAF5" stroke="#3A2A1D" stroke-width="3"/>
+  </g>
+</svg>

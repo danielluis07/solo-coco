@@ -19,7 +19,7 @@ export default defineConfig({
     command: "bun run build && bun run start",
     url: baseURL,
     env: { PORT: String(port) },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI && !process.env.METADATA_TEST_MATRIX,
     timeout: 240_000,
   },
 });
