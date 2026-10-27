@@ -1,5 +1,31 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Metadata and deployment
+
+Set `PRODUCTION_URL` to the real, absolute production origin (including `https://`)
+before building to enable `metadataBase`, canonical, `og:url` and absolute sharing
+image URLs. Leave it unset until the hostname is known: social image paths stay
+relative, and canonical and `og:url` are omitted. No hostname is inferred from
+deployment URLs.
+
+Indexing is enabled only when `VERCEL_ENV=production`, or, for self-hosted
+deployments without `VERCEL_ENV`, `DEPLOYMENT_ENV=production`. Vercel's environment
+takes precedence. Previews, development and unconfigured environments get
+`noindex` even when `PRODUCTION_URL` is supplied. `NODE_ENV` does not control this.
+These values are read during the build; rebuild after changing them.
+
+`public/sharing-image.png` (1200 × 630), `app/favicon.ico` (32 × 32),
+`app/icon.png` (32 × 32) and `app/apple-icon.png` (180 × 180) are static
+placeholders. Replace the files at the same paths and sizes when final artwork
+arrives; no code change is needed. Editable SVG sources are in `assets/metadata/`.
+The approved title, description and image alt text live in `content/page.ts`.
+
+Run `bun run test:metadata` to build and check five deployment scenarios with
+Playwright, including production and preview with and without a production URL.
+It starts a fresh server for each build. The `.example` hostname used by these
+tests is reserved test data. The ordinary `bun run test:e2e` suite assumes an
+unconfigured environment; use the matrix command for deployment-specific checks.
+
 ## Getting Started
 
 First, run the development server:

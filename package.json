@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "bun test ./lib",
     "test:e2e": "playwright test",
+    "test:metadata": "bun scripts/test-metadata.ts",
     "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
