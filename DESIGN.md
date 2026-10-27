@@ -140,6 +140,18 @@ Positions are in timeline units out of 100.
 | 75–92 | Lata gira | A headline arrives top-left, and the can turns slowly through 180° to show its back label, with a short body line in the opposite corner. |
 | 92–100 | Saída | The dark Fibra brand-statement panel rises over the can (uneven, hand-cut top edge). The page below continues in the same Fibra, so the hand-off is seamless. |
 
+### On phones: Estreita
+
+Decided in [How does the hero behave on phones?](https://github.com/danielluis07/solo-coco/issues/11). The prototype is variant P1 on `prototype/hero-scroll` (`variant-p1.tsx`, viewed through `/prototype/hero-scroll/phone`). On portrait phones (below the `sm` breakpoint, 640 px) the Vitrine timeline is kept beat for beat and everything shrinks to fit:
+
+- **Same Beats, same units.** No Beat is shortened, merged or dropped; the table above holds as is.
+- **Scroll**: about 6 viewport heights instead of 7.
+- **Object**: the coconut is about 60% of the viewport width (desktop scale × 0.73), sitting slightly below centre; the can is scaled down by the same ratio. At the desktop size it would fill about 82% of a 390 px screen and leave the badges no room.
+- **Split headlines** go above and below the object instead of into opposite corners: the first line top-left in the back layer, the second right-aligned near the bottom in the front layer. Display sizes are set in `vw` so a line never overflows: about 17vw for "Só o coco." and "Gelado.", 15vw for "Coco, gelo", 11.5vw for "e paciência.".
+- **Corner copy** stays in the two bottom corners at about 13 px, each block under half the width.
+- **Badges**: 104 px instead of 144 px. They still drift up at staggered times, the outer two in front and overlapping the object's edges, the middle one behind it.
+- **Meter** spans the full width (less the 20 px gutters) along the bottom.
+
 ### Known trade-off
 
 Because the hero scrubs, a fast scroller compresses the Facão beat and a slow one stretches it. Accepted: the cut is kept short in units and on an expo ease, so it still reads as the sharp beat at normal speeds.
