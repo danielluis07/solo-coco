@@ -23,15 +23,21 @@ const out = join(root, "public/hero");
 /**
  * ADR 0002 triangle budgets, per model as it is drawn: the whole coconut and the
  * two halves are never on screen together, so each state is held to the budget.
+ * The coconut's are raised so the husk's grooves are real geometry (ADR 0002, amended).
  */
 const budgets = {
   "coconut.glb": [
-    { nodes: ["Coconut"], min: 10_000, max: 25_000 },
-    { nodes: ["Coconut_Top", "Coconut_Bottom"], min: 10_000, max: 25_000 },
+    { nodes: ["Coconut"], min: 50_000, max: 90_000 },
+    { nodes: ["Coconut_Top", "Coconut_Bottom"], min: 50_000, max: 120_000 },
   ],
   "can.glb": [{ nodes: ["Can"], min: 2_000, max: 6_000 }],
 };
-const textureSize = { min: 1024, max: 2048 };
+/** Texture sizes per file; the husk's colour map is 4096 wide so its fibre holds up close. */
+const textureSizes = {
+  "coconut.glb": { min: 1024, max: 4096 },
+  "can.glb": { min: 1024, max: 2048 },
+  "label-so-o-coco.ktx2": { min: 1024, max: 2048 },
+};
 
 function findBlender() {
   if (process.env.BLENDER) return process.env.BLENDER;
@@ -48,8 +54,9 @@ async function run(cmd: string[]) {
   if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} exited with ${proc.exitCode}`);
 }
 
-function checkTextureSize(name: string, w: number, h: number) {
-  if (w % 4 || h % 4 || Math.max(w, h) > textureSize.max || Math.max(w, h) < textureSize.min) {
+function checkTextureSize(file: keyof typeof textureSizes, name: string, w: number, h: number) {
+  const size = textureSizes[file];
+  if (w % 4 || h % 4 || Math.max(w, h) > size.max || Math.max(w, h) < size.min) {
     throw new Error(`${name} is ${w}×${h}`);
   }
 }
@@ -80,14 +87,14 @@ async function checkBudgets() {
     }
     for (const texture of document.getRoot().listTextures()) {
       const [w, h] = texture.getSize() ?? [0, 0];
-      checkTextureSize(`${file}: texture ${texture.getName()}`, w, h);
+      checkTextureSize(file as keyof typeof budgets, `${file}: texture ${texture.getName()}`, w, h);
     }
     console.log(`${file}: materials ${document.getRoot().listMaterials().map((m) => m.getName()).join(", ")}`);
   }
 
   // KTX2 header: pixelWidth and pixelHeight follow the identifier, vkFormat and typeSize.
   const label = new DataView((await readFile(join(out, "label-so-o-coco.ktx2"))).buffer);
-  checkTextureSize("label-so-o-coco.ktx2", label.getUint32(20, true), label.getUint32(24, true));
+  checkTextureSize("label-so-o-coco.ktx2", "label-so-o-coco.ktx2", label.getUint32(20, true), label.getUint32(24, true));
 }
 
 await rm(work, { recursive: true, force: true });
@@ -110,20 +117,28 @@ await run([
   labelPng,
 ]);
 
-// The flags after the ticket's command keep the named nodes, materials and UVs the
-// Hero reads (Coconut, Coconut_Top, Coconut_Bottom, Can; Body_Label), and keep
-// the halves' crack edges exactly on the whole coconut's surface.
 for (const file of Object.keys(budgets)) {
+  // KTX2 first, by slot: ETC1S keeps the husk's colour small, and the normals take UASTC,
+  // which ETC1S would block up, with zstd (fibre noise barely compresses, though).
+  const textured = join(work, `ktx2-${file}`);
+  await run(["bunx", "gltf-transform", "etc1s", join(work, file), textured, "--slots", "baseColorTexture"]);
+  await run(["bunx", "gltf-transform", "uastc", textured, textured, "--slots", "normalTexture", "--level", "2", "--zstd", "18"]);
+  // The flags after the ticket's command keep the named nodes, materials and UVs the
+  // Hero reads (Coconut, Coconut_Top, Coconut_Bottom, Liquid, Can; Body_Label), and keep
+  // the halves' crack edges exactly on the whole coconut's surface.
   await run([
     "bunx",
     "gltf-transform",
     "optimize",
-    join(work, file),
+    textured,
     join(out, file),
     "--compress",
     "meshopt",
+    // Already KTX2, above.
     "--texture-compress",
-    "ktx2",
+    "false",
+    "--texture-size",
+    String(textureSizes[file as keyof typeof budgets].max),
     "--flatten",
     "false",
     "--join-named",

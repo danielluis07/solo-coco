@@ -34,14 +34,24 @@ RNG = np.random.default_rng(25)
 # Coconut: a mature brown coconut lying on its side, its long axis on X.
 # Half-length (x), half-depth (y) and half-height (z).
 COCONUT = (1.6, 1.25, 1.15)
+# Segments around and along it: fine enough for the husk's grooves to be real geometry.
+COCONUT_SEGMENTS = (256, 128)
+# How deep the husk's grooves cut into the mesh, and how deep its finer relief reads in the normal map.
+GROOVE_DEPTH = 0.07
+RELIEF_DEPTH = 0.012
+# Husk colour and normal map sizes (u around, v end to end).
+HUSK_TEXTURE = (4096, 2048)
+HUSK_NORMAL = (2048, 1024)
 HUSK_THICKNESS = 0.16
+SHELL_THICKNESS = 0.03
 FLESH_THICKNESS = 0.07
 # The crack that splits it, across the middle: a zigzag of uneven teeth.
 CUT_Z = 0.1
 TEETH = 16
 TOOTH_HEIGHT = 0.11
-# The coconut water stands just under the lowest point of the crack.
-LIQUID_Z = CUT_Z - TOOTH_HEIGHT * 1.3 - 0.05
+# The coconut water: where it rests, and the highest a slosh may lift it, just under the crack's lowest point.
+LIQUID_Z = CUT_Z - TOOTH_HEIGHT * 1.3 - 0.07
+LIQUID_TOP = CUT_Z - TOOTH_HEIGHT * 1.3 - 0.015
 
 # Can: a 350 ml can is 66 mm across and 122 mm tall, with about 100 mm printed.
 CAN_RADIUS = 0.66
@@ -115,17 +125,13 @@ def mark_sharp(bm, degrees):
 
 
 def coconut_point(direction):
-    """Pushes a unit-sphere direction, poles on X, out to the mature coconut's surface."""
+    """Pushes a unit-sphere direction, poles on X, out to the coconut's surface under the husk's grooves."""
     d = direction.normalized()
     # An egg on its side: fuller at the stem end (+X), a little narrower at the far end.
     girth = 1 + 0.04 * d.x - 0.03 * max(-d.x, 0) ** 2
-    lumps = 1 + 0.035 * noise.noise(d * 1.7) + 0.01 * noise.noise(d * 4.3)
-    # Bundles of fibre run end to end as ridges, so this noise is stretched along X.
-    ridges = (
-        1
-        + 0.024 * noise.noise(Vector((d.x * 1.0, d.y * 4.5, d.z * 4.5)))
-        + 0.007 * noise.noise(Vector((d.x * 1.5, d.y * 11.0, d.z * 11.0)))
-    )
+    # The nut inside is three-sided, so the husk swells into three soft ridges end to end.
+    ridges = 1 + 0.02 * math.cos(3 * math.atan2(d.z, d.y) + 0.6) * (1 - d.x * d.x)
+    lumps = 1 + 0.04 * noise.noise(d * 1.4) + 0.015 * noise.noise(d * 3.7)
     s = lumps * ridges
     return Vector((COCONUT[0] * d.x * s, COCONUT[1] * d.y * girth * s, COCONUT[2] * d.z * girth * s))
 
@@ -142,12 +148,35 @@ def value_noise(u, v, cells_u, cells_v):
     i1 = (i0 + 1) % cells_u
     top = grid[j0, i0] * (1 - fu) + grid[j0, i1] * fu
     bottom = grid[j0 + 1, i0] * (1 - fu) + grid[j0 + 1, i1] * fu
-    return top * (1 - fv) + bottom * fv
+    return (top * (1 - fv) + bottom * fv).astype(np.float32)
+
+
+def value_noise_3d(points, cells):
+    """Smooth value noise at 3D points (..., 3), `cells` lattice cells per unit."""
+    table = RNG.random((64, 64, 64)).astype(np.float32)
+    g = points * cells + 32
+    i = np.floor(g).astype(np.int64)
+    f = g - i
+    f = f * f * (3 - 2 * f)
+    total = 0
+    for corner in range(8):
+        offset = [(corner >> axis) & 1 for axis in range(3)]
+        weight = 1
+        for axis in range(3):
+            weight = weight * (f[..., axis] if offset[axis] else 1 - f[..., axis])
+        cell = (i + offset) % 64
+        total = total + weight * table[cell[..., 0], cell[..., 1], cell[..., 2]]
+    return total.astype(np.float32)
 
 
 def smoothstep(e0, e1, x):
     t = np.clip((x - e0) / (e1 - e0), 0, 1)
     return t * t * (3 - 2 * t)
+
+
+def texel_grid(width, height):
+    """(u, v) at every texel centre, rows running from v = 0."""
+    return np.meshgrid((np.arange(width, dtype=np.float32) + 0.5) / width, (np.arange(height, dtype=np.float32) + 0.5) / height)
 
 
 def save_image(name, rgb, srgb):
@@ -167,89 +196,169 @@ def save_image(name, rgb, srgb):
     return image
 
 
-def strands(shape, count, length, spread, wobble):
-    """Rasterises `count` fibre strands into a (v, u) layer, mostly running along v.
-
-    length is a (min, max) in pixels, spread the angle's standard deviation off the v axis
-    in radians, and wobble how far a strand bows sideways, in pixels. Strands wrap around u.
-    """
-    height, width = shape
-    steps = int(length[1])
-    t = np.linspace(0, 1, steps)[None, :]
-    lengths = RNG.uniform(*length, count)[:, None]
-    angle = RNG.normal(0, spread, count)[:, None]
-    bend = wobble * np.sin(np.pi * t * RNG.uniform(1, 3, (count, 1)) + RNG.uniform(0, 2 * np.pi, (count, 1)))
-    along = t * lengths
-    u = RNG.uniform(0, width, (count, 1)) + along * np.sin(angle) + bend * np.cos(angle)
-    v = RNG.uniform(0, height, (count, 1)) + along * np.cos(angle)
-    # About one sample per pixel whatever the length, thinning out at both tips.
-    weight = np.sqrt(np.sin(np.pi * t)) * lengths / steps
-    rows = np.clip(np.round(v).astype(int), 0, height - 1)
-    cols = np.round(u).astype(int) % width
-    layer = np.bincount((rows * width + cols).ravel(), np.broadcast_to(weight, rows.shape).ravel(), minlength=height * width)
-    return layer.reshape(shape)
+def box(layer, radius, axis):
+    """A box blur along one axis: wrapping around u (axis 1), clamped at the ends (axis 0)."""
+    n = layer.shape[axis]
+    pad = [(0, 0), (0, 0)]
+    pad[axis] = (radius + 1, radius)
+    total = np.cumsum(np.pad(layer, pad, mode="wrap" if axis == 1 else "edge"), axis=axis, dtype=np.float64)
+    upper = np.take(total, np.arange(2 * radius + 1, 2 * radius + 1 + n), axis=axis)
+    lower = np.take(total, np.arange(n), axis=axis)
+    return ((upper - lower) / (2 * radius + 1)).astype(np.float32)
 
 
-def widen(layer, passes):
-    """Blurs a layer across u, so its strands are a few pixels wide."""
-    for _ in range(passes):
-        layer = 0.25 * np.roll(layer, 1, axis=1) + 0.5 * layer + 0.25 * np.roll(layer, -1, axis=1)
+def blur(layer, sigma_u, sigma_v=0.0):
+    """A near-Gaussian blur of about sigma texels (three box passes per axis)."""
+    for axis, sigma in ((1, sigma_u), (0, sigma_v)):
+        radius = round((math.sqrt(4 * sigma * sigma + 1) - 1) / 2)
+        for _ in range(3 if radius else 0):
+            layer = box(layer, radius, axis)
     return layer
 
 
-def coverage(layer, density):
+def sample(layer, u, v):
+    """Bilinear lookup of a (v, u) layer at texture coordinates, wrapping around u."""
+    height, width = layer.shape
+    x, y = u * width - 0.5, min(max(v * height - 0.5, 0), height - 1)
+    x0, y0 = math.floor(x), min(math.floor(y), height - 2)
+    fx, fy = x - x0, y - y0
+    x0, x1 = x0 % width, (x0 + 1) % width
+    top = layer[y0, x0] * (1 - fx) + layer[y0, x1] * fx
+    bottom = layer[y0 + 1, x0] * (1 - fx) + layer[y0 + 1, x1] * fx
+    return float(top * (1 - fy) + bottom * fy)
+
+
+def fibre_flow(width, height):
+    """How far the husk's grain runs off the coconut's length at each texel, in radians: combed, but wandering."""
+    uu, vv = texel_grid(width, height)
+    return 0.55 * (value_noise(uu, vv, 5, 3) - 0.5) + 0.35 * (value_noise(uu, vv, 16, 6) - 0.5)
+
+
+def strands(flow, count, length, jitter, curl):
+    """Rasterises `count` fibre strands into a (v, u) layer, each following the flow field.
+
+    length is a (min, max) in texels, jitter how far (radians) each strand's own heading
+    strays from the flow, and curl how much that heading wanders per texel. Strands wrap around u.
+    """
+    height, width = flow.shape
+    lengths = RNG.uniform(*length, count)
+    x = RNG.uniform(0, width, count)
+    y = RNG.uniform(0, height, count)
+    way = RNG.choice([-1.0, 1.0], count)
+    own = RNG.normal(0, jitter, count)
+    cells, weights = [], []
+    for step in range(int(length[1])):
+        alive = lengths > step
+        col = x[alive].astype(np.int64) % width
+        row = np.clip(y[alive].astype(np.int64), 0, height - 1)
+        cells.append(row * width + col)
+        # Thinning out at both tips.
+        weights.append(np.sqrt(np.sin(np.pi * step / lengths[alive])))
+        angle = flow[row, col] + own[alive]
+        x[alive] += way[alive] * np.sin(angle)
+        y[alive] += way[alive] * np.cos(angle)
+        own[alive] += RNG.normal(0, curl, int(alive.sum()))
+    layer = np.bincount(np.concatenate(cells), np.concatenate(weights), minlength=height * width)
+    return layer.reshape(height, width).astype(np.float32)
+
+
+def strand_layer(flow, count, length, jitter, width, curl=0.02, density=1.2):
+    """How thickly strands `width` texels across cover each texel, 0 bare to 1 covered."""
+    layer = strands(flow, count, length, jitter, curl)
+    sigma = width / 2.5
+    if sigma >= 0.5:
+        # Scaled so a single strand peaks at 1 whatever its width.
+        line = np.zeros((4, 64), np.float32)
+        line[:, 32] = 1
+        layer = blur(layer, sigma) / blur(line, sigma).max()
     return 1 - np.exp(-density * layer)
 
 
-def husk_textures(width=2048, height=1024):
-    """Colour and normal maps of the brown husk: coarse fibre along v, frizz across it, creases."""
-    shape = (height, width)
-    u = (np.arange(width) + 0.5) / width
-    v = (np.arange(height) + 0.5) / height
-    uu, vv = np.meshgrid(u, v)
+def husk_textures():
+    """The brown husk, painted on the coconut's UVs (u around it, v end to end, so the fibre runs along v).
 
-    fibres = coverage(widen(strands(shape, 80_000, (8, 40), 0.18, 1.0), 1), 0.9)
-    cords = coverage(widen(strands(shape, 6_000, (40, 140), 0.1, 3.0), 2), 0.9)
-    frizz = coverage(widen(strands(shape, 7_000, (6, 28), 0.7, 1.0), 1), 0.8)
-    creases = coverage(widen(strands(shape, 1_200, (150, 600), 0.04, 6.0), 4), 2.5)
-    # Wide bundles of fibre that catch the light, with darker, sparser husk between them.
-    wander = 0.01 * (value_noise(uu, vv, 6, 4) - 0.5)
-    bundles = smoothstep(0.4, 0.75, value_noise(uu + wander, vv, 130, 28))
-    # Matted, mottled husk, broken up at every scale.
-    mottle = 0.6 * value_noise(uu, vv, 220, 110) + 0.4 * value_noise(uu, vv, 70, 35)
-    patches = value_noise(uu, vv, 10, 6)
-    worn = smoothstep(0.7, 0.9, value_noise(uu, vv, 40, 5))
-    # The strands converge at the two ends, so soften them there rather than pinch.
+    Returns the colour and normal images, and the grooves (about -1 deep to 1 proud) the mesh is displaced by.
+    """
+    width, height = HUSK_TEXTURE
+    uu, vv = texel_grid(width, height)
+    flow = fibre_flow(width, height)
+    # The fibre converges on the two ends, so it gives way to a matted cap there. The cap is
+    # noise in 3D, where the ends are points like any other, so nothing pinches into a star.
     ends = smoothstep(0.0, 0.12, vv) * smoothstep(1.0, 0.88, vv)
+    polar, around = np.pi * vv, 2 * np.pi * uu
+    direction = np.stack([np.cos(polar), np.sin(polar) * np.cos(around), np.sin(polar) * np.sin(around)], axis=-1)
+    matted = 0.5 * value_noise_3d(direction, 7) + 0.3 * value_noise_3d(direction, 20) + 0.2 * value_noise_3d(direction, 60)
+    del direction
+
+    # Deep fissures between the bundles, and wide, shallow furrows the mesh itself follows.
+    fissures = strand_layer(flow, 70, (300, 1200), 0.02, 9, curl=0.005, density=1.6)
+    furrows = strand_layer(flow, 60, (700, 1900), 0.02, 40, curl=0.005, density=1.8)
+    # Rope-like bundles of fibre, the coarser cords on them and fine fibre over everything.
+    bundles = strand_layer(flow, 2600, (80, 520), 0.1, 11)
+    cords = strand_layer(flow, 14_000, (30, 180), 0.14, 3)
+    fibres = strand_layer(flow, 220_000, (8, 50), 0.22, 1.2, density=0.9)
+    # Loose frizz lifting off the surface every which way.
+    frizz = strand_layer(flow, 30_000, (5, 26), 1.3, 1.3, curl=0.15, density=0.8)
+
+    mottle = 0.6 * value_noise(uu, vv, 240, 120) + 0.4 * value_noise(uu, vv, 60, 30)
+    patches = value_noise(uu, vv, 9, 5)
+    shine = value_noise(uu, vv, 120, 30)
+    # Torn patches, where the top fibre has come away from the dark, matted husk under it.
+    torn = smoothstep(0.68, 0.8, value_noise(uu, vv, 34, 10))
+    # Worn patches, rubbed pale and flat.
+    worn = smoothstep(0.72, 0.9, value_noise(uu, vv, 22, 5))
+    # Chips where the husk is broken through to the pale pith.
+    chips = np.zeros_like(uu)
+    for cu, cv, ru, rv in [(0.33, 0.47, 34, 44), (0.71, 0.62, 16, 22), (0.06, 0.35, 12, 18)]:
+        du = (uu - cu + 0.5) % 1 - 0.5
+        reach = np.hypot(du * width / ru, (vv - cv) * height / rv) + 0.5 * (mottle - 0.5)
+        chips = np.maximum(chips, smoothstep(1.0, 0.7, reach))
+
+    top = (1 - 0.7 * torn) * (1 - chips)
+    relief = (0.7 * bundles + 0.3 * cords) * top + 0.12 * fibres + 0.08 * frizz - 0.8 * fissures - 1.2 * furrows + 0.2 * mottle - 0.5 * chips
+    relief = (relief - relief.mean()) / relief.std()
+    relief = relief * ends + 2.5 * (matted - 0.5) * (1 - ends)
+
+    # Shadowed hollows: how far each texel sits below its surroundings, near and wide.
+    hollow = np.maximum(blur(relief, 5, 5) - relief, 0) + 0.7 * np.maximum(blur(relief, 24, 24) - relief, 0)
+    occlusion = np.exp(-0.55 * hollow)
 
     def mix(a, b, t):
         return a + (b - a) * t[..., None]
 
     def rgb(hex_color):
-        return np.array(srgb_to_linear(hex_color))
+        return np.array(srgb_to_linear(hex_color), np.float32)
 
-    # Red-brown husk, dark where the fibres part, tan where they lie on top.
-    color = mix(rgb("#3F1A0B"), rgb("#7A361B"), patches)
-    color = mix(color, rgb("#1F0B04"), 0.85 * (1 - fibres) * (1 - cords) * (1 - 0.5 * bundles) * ends)
-    color = mix(color, mix(rgb("#8A4322"), rgb("#CB8650"), bundles), 0.85 * fibres * ends)
-    color = mix(color, rgb("#8A4524"), 0.6 * cords)
-    color = mix(color, rgb("#C88A58"), 0.45 * frizz * ends)
-    color = mix(color, rgb("#1C0B05"), 0.85 * creases)
-    color = color * (0.7 + 0.6 * mottle[..., None])
-    # Rubbed patches, where the fibre is worn pale and flat.
-    color = mix(color, rgb("#8C6450"), 0.3 * worn * (1 - creases))
+    # Matted red-brown husk, nearly black where the bundles part.
+    color = mix(rgb("#3C1408"), rgb("#6A2610"), patches)
+    color = mix(color, rgb("#1C0703"), 0.8 * (1 - bundles))
+    color = mix(color, mix(rgb("#7A3216"), rgb("#A44E26"), mottle), 0.9 * bundles * top)
+    color = mix(color, rgb("#B35E2E"), 0.5 * cords * top)
+    color = mix(color, mix(rgb("#8E3F1E"), rgb("#D08A55"), shine), 0.5 * fibres * (0.4 + 0.6 * top))
+    color = mix(color, rgb("#E29A62"), 0.5 * frizz * ends)
+    color = mix(color, rgb("#8E5E48"), 0.3 * worn * (1 - fissures))
+    color = mix(color, rgb("#1A0603"), 0.7 * fissures)
+    color = color * occlusion[..., None] * (0.8 + 0.4 * mottle[..., None])
+    color = mix(color, mix(rgb("#DCCBB2"), rgb("#A88A6E"), mottle), chips * (1 - 0.6 * fibres))
+    # The ends: matted, darker fibre.
+    color = mix(mix(rgb("#2A0D05"), rgb("#7A3216"), matted) * occlusion[..., None], color, ends)
 
-    relief = (0.3 * fibres + 0.3 * cords + 0.15 * frizz + 0.4 * bundles + 0.3 * mottle - 0.9 * creases) * (0.3 + 0.7 * ends) * (1 - 0.5 * worn)
-
-    # Tangent-space normals from the relief: x along u, y along v, as glTF and Blender both read them.
-    # At half the colour's size: normal maps ship as UASTC, the heavier KTX2 format.
-    relief = relief.reshape(height // 2, 2, width // 2, 2).mean(axis=(1, 3))
-    du = (np.roll(relief, -1, axis=1) - np.roll(relief, 1, axis=1)) / 2
-    dv = np.gradient(relief, axis=0)
-    strength = 2.5
-    normal = np.stack([-strength * du, -strength * dv, np.ones_like(relief)], axis=-1)
+    # Tangent-space normals from the relief, at the normal map's size: x along u, y along v,
+    # as glTF and Blender both read them. Each texel's width shrinks towards the ends.
+    factor = width // HUSK_NORMAL[0]
+    small = relief.reshape(height // factor, factor, width // factor, factor).mean(axis=(1, 3))
+    span_u = 2 * math.pi * 0.5 * (COCONUT[1] + COCONUT[2]) / small.shape[1]
+    span_v = math.pi * 0.5 * (COCONUT[0] + 0.5 * (COCONUT[1] + COCONUT[2])) / small.shape[0]
+    shrink = np.maximum(np.sin(np.pi * vv[::factor, ::factor]), 0.15)
+    du = (np.roll(small, -1, axis=1) - np.roll(small, 1, axis=1)) / 2 * RELIEF_DEPTH / (span_u * shrink)
+    dv = np.gradient(small, axis=0) * RELIEF_DEPTH / span_v
+    normal = np.stack([-du, -dv, np.ones_like(small)], axis=-1)
     normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
-    return save_image("Husk", color, srgb=True), save_image("Husk_Normal", normal * 0.5 + 0.5, srgb=False)
+
+    # What the mesh follows: the wide relief only, faded out on the ends so the poles stay closed.
+    grooves = blur(relief, 12, 6) * smoothstep(0.0, 0.1, vv) * smoothstep(1.0, 0.9, vv)
+    grooves /= 3 * grooves.std()
+    return save_image("Husk", color, srgb=True), save_image("Husk_Normal", normal * 0.5 + 0.5, srgb=False), grooves
 
 
 def uv_sphere(u_segments, v_segments):
@@ -260,19 +369,24 @@ def uv_sphere(u_segments, v_segments):
     return bm
 
 
-def whole_coconut(mats):
-    bm = uv_sphere(112, 60)
+def whole_coconut(mats, grooves):
+    bm = uv_sphere(*COCONUT_SEGMENTS)
     # Poles on X, so the fibres in the texture run along the coconut's length.
     bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(90), 3, "Y"))
+    uv = bm.loops.layers.uv.active
     for vert in bm.verts:
-        vert.co = coconut_point(vert.co)
+        p = coconut_point(vert.co)
+        # Into the grooves, along the ellipsoid's normal there.
+        outward = Vector((p.x / COCONUT[0] ** 2, p.y / COCONUT[1] ** 2, p.z / COCONUT[2] ** 2)).normalized()
+        u, v = vert.link_loops[0][uv].uv
+        vert.co = p + outward * GROOVE_DEPTH * sample(grooves, u, v)
     for face in bm.faces:
         face.smooth = True
         face.material_index = 0
-    return link("Coconut", bm, [mats["Husk"], mats["Husk_Inner"], mats["Flesh"]])
+    return link("Coconut", bm, [mats["Husk"], mats["Husk_Inner"], mats["Shell"], mats["Flesh"]])
 
 
-def ellipsoid(radii, inside_out=False, segments=(40, 20)):
+def ellipsoid(radii, inside_out=False, segments=(48, 24)):
     bm = uv_sphere(*segments)
     for vert in bm.verts:
         vert.co = Vector((vert.co.x * radii[0], vert.co.y * radii[1], vert.co.z * radii[2]))
@@ -283,25 +397,27 @@ def ellipsoid(radii, inside_out=False, segments=(40, 20)):
     return bm
 
 
-# The cavity inside the husk, and the inner wall of the white flesh lining it.
-CAVITY = tuple(r - HUSK_THICKNESS for r in COCONUT)
-FLESH_WALL = tuple(r - FLESH_THICKNESS for r in CAVITY)
+# Inside the husk: the hard brown shell, the white flesh lining it, and the flesh's inner wall.
+SHELL = tuple(r - HUSK_THICKNESS for r in COCONUT)
+MEAT = tuple(r - SHELL_THICKNESS for r in SHELL)
+FLESH_WALL = tuple(r - FLESH_THICKNESS for r in MEAT)
 
 
 def cavity(mats):
-    return link("Cavity", ellipsoid(CAVITY), [mats["Flesh"]])
+    """What the husk is hollowed out by, so the shell fits inside it."""
+    return link("Cavity", ellipsoid(SHELL), [mats["Shell"]])
 
 
-def flesh_shell(mats):
-    """The white flesh lining the cavity: a closed shell, its inner wall facing inwards."""
-    bm = ellipsoid(CAVITY)
-    shell = ellipsoid(FLESH_WALL, inside_out=True)
+def layer(name, outer, inner, mat):
+    """A closed shell between two ellipsoids, its inner wall facing inwards."""
+    bm = ellipsoid(outer)
+    shell = ellipsoid(inner, inside_out=True)
     mesh = bpy.data.meshes.new("tmp")
     shell.to_mesh(mesh)
     shell.free()
     bm.from_mesh(mesh)
     bpy.data.meshes.remove(mesh)
-    return link("FleshShell", bm, [mats["Flesh"]])
+    return link(name, bm, [mat])
 
 
 def crack_profile():
@@ -354,19 +470,20 @@ def cutter(mats):
 
 
 def liquid(mats):
-    """The coconut water in the bottom half: a slow swell, its rim tucked into the flesh."""
-    across = math.sqrt(1 - (LIQUID_Z / FLESH_WALL[2]) ** 2)
-    radii = (FLESH_WALL[0] * across + 0.02, FLESH_WALL[1] * across + 0.02)
-    bm = disc(
-        lambda x, y, s, angle: LIQUID_Z + 0.025 * noise.noise(Vector((x * 1.6, y * 1.6, 0.5))) * (1 - s**4),
-        # Rings bunched towards the centre, so the fan there doesn't pinch the reflections.
-        rings=[(i / 14) ** 1.3 for i in range(1, 15)],
-        angles=[2 * math.pi * j / 72 for j in range(72)],
-        radii=radii,
-    )
-    for face in bm.faces:
-        face.smooth = True
-    return link("Liquid", bm, [mats["Liquid"]])
+    """The coconut water's vessel: the flesh's hollow, a hair inside it, up to the highest a slosh may reach.
+
+    The live scene draws the water's surface inside it (lib/hero-liquid.ts). Its origin is the
+    still surface's centre, and it carries the hollow's ellipsoid in three.js axes for that.
+    """
+    inset = tuple(r - 0.01 for r in FLESH_WALL)
+    bm = ellipsoid(inset, segments=(64, 32))
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, LIQUID_TOP), plane_no=(0, 0, 1), clear_outer=True)
+    bmesh.ops.translate(bm, verts=bm.verts, vec=(0, 0, -LIQUID_Z))
+    water = link("Liquid", bm, [mats["Liquid"]])
+    water["center"] = [0, -LIQUID_Z, 0]
+    water["radii"] = [inset[0], inset[2], inset[1]]
+    water["top"] = LIQUID_TOP - LIQUID_Z
+    return water
 
 
 def boolean(base, steps):
@@ -395,9 +512,14 @@ def into(bm, mesh, mats, order, force=None):
 
 
 def halves(whole, mats):
-    """Cap and body cut from the whole coconut, lined with white flesh; the body holds the coconut water."""
-    hollow, shell, blade, water = cavity(mats), flesh_shell(mats), cutter(mats), liquid(mats)
-    order = ["Husk", "Husk_Inner", "Flesh", "Liquid"]
+    """Cap and body cut from the whole coconut, each lined with the brown shell and white flesh.
+
+    The body carries the coconut water's vessel as a child, Liquid.
+    """
+    hollow, blade = cavity(mats), cutter(mats)
+    shell = layer("NutShell", SHELL, MEAT, mats["Shell"])
+    flesh = layer("FleshShell", MEAT, FLESH_WALL, mats["Flesh"])
+    order = ["Husk", "Husk_Inner", "Shell", "Flesh"]
     # Both halves pivot on the crack line at the back, so the cap can hinge open or lift off.
     depsgraph = bpy.context.evaluated_depsgraph_get()
     _, back, *_ = whole.ray_cast(Vector((0, 5, CUT_Z)), Vector((0, -1, 0)), depsgraph=depsgraph)
@@ -406,16 +528,19 @@ def halves(whole, mats):
     for name, op in [("Coconut_Top", "INTERSECT"), ("Coconut_Bottom", "DIFFERENCE")]:
         bm = bmesh.new()
         into(bm, boolean(whole, [("DIFFERENCE", hollow), (op, blade)]), mats, order)
-        # The flesh's own cut face is flesh too, not husk.
-        into(bm, boolean(shell, [(op, blade)]), mats, order, force="Flesh")
-        if name == "Coconut_Bottom":
-            into(bm, water.data, mats, order)
+        # Each layer's own cut face is that layer, not husk.
+        into(bm, boolean(shell, [(op, blade)]), mats, order, force="Shell")
+        into(bm, boolean(flesh, [(op, blade)]), mats, order, force="Flesh")
         bmesh.ops.translate(bm, verts=bm.verts, vec=-pivot)
         for face in bm.faces:
             face.smooth = face.material_index != 1
         mark_sharp(bm, 50)
         pieces[name] = link(name, bm, [mats[n] for n in order], location=pivot)
-    for helper in (hollow, shell, blade, water):
+    water = liquid(mats)
+    water.parent = pieces["Coconut_Bottom"]
+    water.location = Vector((0, 0, LIQUID_Z)) - pivot
+    pieces["Liquid"] = water
+    for helper in (hollow, blade, shell, flesh):
         bpy.data.objects.remove(helper, do_unlink=True)
     return pieces
 
@@ -537,6 +662,8 @@ def export(path, objects, images):
         export_animations=False,
         export_cameras=False,
         export_lights=False,
+        # Custom properties, such as the coconut water's ellipsoid, become node extras.
+        export_extras=True,
     )
 
 
@@ -618,20 +745,22 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     reset_scene()
     label = bpy.data.images.load(str(LABEL_PNG))
-    husk_color, husk_normal = husk_textures()
+    husk_color, husk_normal, grooves = husk_textures()
     mats = {
-        "Husk": material("Husk", "#7A361B", 0.85, image=husk_color, normal=husk_normal),
-        # Cut husk and shell of a mature coconut: tan-brown fibre.
-        "Husk_Inner": material("Husk_Inner", "#6B3E24", 0.95),
+        "Husk": material("Husk", "#7A361B", 0.9, image=husk_color, normal=husk_normal),
+        # The cut husk of a mature coconut: tan-brown fibre.
+        "Husk_Inner": material("Husk_Inner", "#7A4A2A", 0.95),
+        # The hard nut shell between the husk and the flesh.
+        "Shell": material("Shell", "#3A2416", 0.6),
         "Flesh": material("Flesh", "#FAFAF5", 0.45),
-        # Milky and glossy. Its reflections, added in the live scene (lib/hero-assets.ts), bring it up to white.
-        "Liquid": material("Liquid", "#9E9A93", 0.08),
+        # Only names the coconut water's vessel: the live scene draws the water (lib/hero-liquid.ts).
+        "Liquid": material("Liquid", "#E8ECE6", 0.05),
         # The label image is applied at runtime per Flavour (flipY = false, sRGB); the GLB carries none.
         "Body_Label": material("Body_Label", "#FFFFFF", 0.35, metallic=0.15, image=label),
         "Metal": material("Metal", "#C9CED2", 0.3, metallic=0.6),
     }
 
-    whole = whole_coconut(mats)
+    whole = whole_coconut(mats, grooves)
     pieces = halves(whole, mats)
     export(OUT / "coconut.glb", [whole, *pieces.values()], images=True)
 
