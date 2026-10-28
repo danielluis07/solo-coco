@@ -109,6 +109,8 @@ export const defaultPack = packs[0];
 export const flavourTitle = (f: Flavour) => `${brand} ${f.name}`;
 export const flavourStats = (f: Flavour) => `${f.kcal} kcal · ${f.sugarGrams} g de açúcar`;
 export const packLabel = (p: Pack) => `${p.label} · ${p.priceLabel}`;
+/** The one polite status message after a Quick-add change: the resulting quantity and price. */
+export const quickAddAnnouncement = (f: Flavour, p: Pack) => `${flavourTitle(f)}: ${packLabel(p)}`;
 
 export const copy = {
   header: {
