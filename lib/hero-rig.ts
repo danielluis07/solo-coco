@@ -22,8 +22,8 @@ export function createHeroRig() {
     burst: 0,
     /** The Copy that moves around the object, in reading order within each Beat. */
     copy: {
-      /** Girar: the headline, the call to action and the two corner lines, composed from the first frame. */
-      intro: pieces(4, 1),
+      /** Girar: the headline and serving line, composed from the first frame. */
+      intro: pieces(2, 1),
       /** Facão: the two lines of the split headline. */
       opened: pieces(2, 0),
       /** Lata gira: the headline and the corner block. */

@@ -201,33 +201,6 @@ test("the accessible tree is the same as in Static, with the counter hidden", as
   expect(await page.locator('[aria-hidden="true"] :is(a, button, [tabindex])').count()).toBe(0);
 });
 
-test("keyboard focus on the Hero's link, deep in the Beats, shows it unobscured", async ({ page }) => {
-  await page.goto("/");
-  await expect3d(page);
-  const cta = hero(page).getByRole("link", { name: opening.cta.label, exact: true });
-
-  // Late in Saída the intro, the link included, has long gone, and the frame is nearly wiped away.
-  await scrollToUnit(page, 99);
-  await page.waitForTimeout(1_500);
-  await page
-    .locator(`#${anchors.statement}`)
-    .getByRole("link")
-    .evaluate((el: HTMLElement) => el.focus({ preventScroll: true }));
-  await page.keyboard.press("Shift+Tab");
-
-  await expect(cta).toBeFocused();
-  await expect(cta).toBeInViewport();
-  await expect
-    .poll(() =>
-      cta.evaluate((el) => {
-        const box = el.getBoundingClientRect();
-        const shown = Number(getComputedStyle(el.closest("[data-vitrine]")!).opacity) === 1;
-        return shown && el.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
-      }),
-    )
-    .toBe(true);
-});
-
 test("scrolling through the Hero causes no React re-renders", async ({ page }) => {
   test.setTimeout(60_000);
   const commits = await countCommits(page);
@@ -329,16 +302,14 @@ test.describe("Estreita, on a phone", () => {
   });
 });
 
-test("the intro composition is the first paint: “Só o coco.” with its underline and the corner lines", async ({
+test("the intro composition is the first paint: “Só o coco.” with its underline and serving line", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-hero-layout", "vitrine");
   const h1 = page.getByRole("heading", { level: 1, name: opening.headline });
   await expect(h1).toBeInViewport();
-  for (const line of [opening.corner, opening.oppositeCorner]) {
-    await expect(hero(page).getByText(line, { exact: true })).toBeInViewport();
-  }
+  await expect(hero(page).getByText(opening.oppositeCorner, { exact: true })).toBeInViewport();
   // Waiting Copy is not painted yet.
   for (const text of [...opened.headline, rotatingCan.headline]) {
     await expect(hero(page).getByText(text, { exact: true })).toHaveCSS("opacity", "0");

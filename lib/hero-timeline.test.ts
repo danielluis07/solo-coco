@@ -91,11 +91,11 @@ describe("Hero timeline", () => {
   test("Girar: the intro Copy starts in place and has left upwards by unit 20", () => {
     const { rig, timeline: t } = timeline();
     t.seek(0);
-    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1, 1, 1]);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1]);
     t.seek(7);
-    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1, 1, 1]);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1]);
     t.seek(20);
-    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([2, 2, 2, 2]);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([2, 2]);
   });
 
   test("Facão: the split headline arrives while the cap pries off, and leaves from unit 46", () => {

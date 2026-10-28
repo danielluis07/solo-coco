@@ -36,9 +36,7 @@ test("Hero Copy, including badges and meter labels, is readable in flow", async 
 
   for (const text of [
     opening.headline,
-    opening.corner,
     opening.oppositeCorner,
-    opening.scrollCue,
     ...opened.headline,
     ...opened.badges,
     ...transformation.meterLabels,
@@ -48,7 +46,9 @@ test("Hero Copy, including badges and meter labels, is readable in flow", async 
   ]) {
     await expectOnce(hero, text);
   }
-  await expect(hero.getByRole("link", { name: opening.cta.label, exact: true })).toHaveCount(1);
+  await expect(hero.getByRole("link")).toHaveCount(0);
+  await expect(hero.getByText("Continue descendo.", { exact: true })).toHaveCount(0);
+  await expect(hero.getByText("Bebida de coco levemente gaseificada.", { exact: true })).toHaveCount(0);
   // The 000 → 100 counter is decorative and never exposed.
   await expect(hero.getByText(transformation.counter.to, { exact: true })).toHaveCount(0);
 });

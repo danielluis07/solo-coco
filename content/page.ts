@@ -1,6 +1,7 @@
 // Every piece of page Copy, the Flavour lineup and the SEO strings.
-// Copy is approved in https://github.com/danielluis07/solo-coco/issues/9,
-// Flavour data in DESIGN.md § Flavour lineup, SEO strings in DESIGN.md § SEO.
+// Current Copy is approved in docs/copy-revision.md; original Copy ticket:
+// https://github.com/danielluis07/solo-coco/issues/9.
+// Flavour data and SEO requirements live in DESIGN.md.
 // Components read from here and contain no Copy literals.
 
 export const brand = "SoloCoco";
@@ -48,7 +49,7 @@ export const flavours: readonly Flavour[] = [
     ink: "fibra",
     kcal: 35,
     sugarGrams: 3,
-    descriptor: "Coco e bolhinhas. Já basta.",
+    descriptor: "Água de coco, polpa de coco e um pouco de gás.",
   },
   {
     slug: "maracuja",
@@ -57,7 +58,7 @@ export const flavours: readonly Flavour[] = [
     ink: "fibra",
     kcal: 48,
     sugarGrams: 6,
-    descriptor: "O azedinho chega. O coco fica.",
+    descriptor: "O maracujá dá um azedinho ao coco.",
   },
   {
     slug: "caju",
@@ -66,7 +67,7 @@ export const flavours: readonly Flavour[] = [
     ink: "fibra",
     kcal: 50,
     sugarGrams: 6,
-    descriptor: "Caju na companhia. Coco no comando.",
+    descriptor: "O gosto do caju junto com o coco.",
   },
   {
     slug: "acai",
@@ -75,7 +76,7 @@ export const flavours: readonly Flavour[] = [
     ink: "polpa",
     kcal: 52,
     sugarGrams: 7,
-    descriptor: "Açaí encontra coco. Sem colher.",
+    descriptor: "Açaí com coco, dessa vez em lata.",
   },
   {
     slug: "limao",
@@ -84,7 +85,7 @@ export const flavours: readonly Flavour[] = [
     ink: "fibra",
     kcal: 42,
     sugarGrams: 4,
-    descriptor: "Um toque de limão. O resto é coco.",
+    descriptor: "Um pouco de limão para deixar o coco mais azedinho.",
   },
   {
     slug: "goiaba",
@@ -93,7 +94,7 @@ export const flavours: readonly Flavour[] = [
     ink: "fibra",
     kcal: 55,
     sugarGrams: 7,
-    descriptor: "Goiaba chegou de mansinho.",
+    descriptor: "Dá para sentir a goiaba sem perder o gosto de coco.",
   },
 ];
 
@@ -124,15 +125,12 @@ export const copy = {
     // Girar
     opening: {
       headline: tagline,
-      corner: "Bebida de coco levemente gaseificada.",
-      oppositeCorner: "350 ml. Pra beber sem pressa.",
-      cta: toGrid("Escolha seu coco"),
-      scrollCue: "Desce mais um pouco.",
+      oppositeCorner: "350 ml para tomar bem gelado.",
     },
     // Facão / Selos
     opened: {
-      headline: ["Pode abrir.", "É coco."],
-      badges: ["Só 3 ingredientes", "Levemente gaseificado", "Estupidamente gelado"],
+      headline: ["Coco com", "um pouco de gás."],
+      badges: ["Só 3 ingredientes", "Levemente gaseificado", "Melhor gelado"],
     },
     // Virar lata. The counter is decorative and hidden from assistive technology.
     transformation: {
@@ -141,23 +139,23 @@ export const copy = {
     },
     // Lata gira
     rotatingCan: {
-      headline: "A gente tirou o facão da história.",
-      corner: "O coco ficou. As bolhinhas chegaram.",
+      headline: "Basta abrir a lata.",
+      corner: "E tomar gelado.",
       smallLine: "SoloCoco Só o Coco · 350 ml",
     },
   },
 
   statement: {
     headline: "Coco.",
-    plaque: ["Gelado.", "Sem pressa.", "Do seu jeito."],
-    body: "A ideia veio da barraca. Coco gelado, conversa curta, vontade de ficar. A gente levou isso pra lata.",
-    closing: "Tem fruta, mas quem manda é o coco.",
-    link: toGrid("Escolha seu coco"),
+    plaque: ["Gelado.", "Com gás.", "Com fruta."],
+    body: "SoloCoco é uma bebida de coco com um pouco de gás. Tem a versão só de coco e outras cinco que misturam coco com fruta.",
+    closing: "Veja os sabores e escolha o que deu vontade de experimentar.",
+    link: toGrid("Ver sabores"),
   },
 
   grid: {
-    heading: "Qual é o seu coco?",
-    intro: "Um só coco. Cinco boas companhias.",
+    heading: "Escolha um sabor",
+    intro: "Pode ser só coco ou coco com maracujá, caju, açaí, limão ou goiaba.",
     disclosure: "Marca fictícia. Nenhuma compra é realizada.",
     perCan: "Por lata de 350 ml",
   },
@@ -181,7 +179,7 @@ export const copy = {
 export const seo = {
   title: "SoloCoco — Só o coco.",
   description:
-    "Bebida de coco levemente gaseificada, com seis sabores e jeito de barraca. SoloCoco é uma marca fictícia. Nenhuma compra é realizada.",
+    "Coco com um pouco de gás, em seis sabores. Basta abrir a lata e tomar gelado. Marca fictícia. Nenhuma compra é realizada.",
   siteName: brand,
   locale: "pt_BR",
   type: "website",
@@ -190,5 +188,5 @@ export const seo = {
   imageWidth: 1200,
   imageHeight: 630,
   imageAlt:
-    "SoloCoco — Só o coco. Lata do sabor Só o Coco sobre fundo claro, com sombra marrom. Marca fictícia.",
+    "Lata de SoloCoco Só o Coco sobre fundo claro, ao lado do nome SoloCoco e da frase Só o coco. Marca fictícia.",
 } as const;

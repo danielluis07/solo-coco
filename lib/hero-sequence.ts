@@ -117,16 +117,6 @@ export function startHeroSequence(rig: HeroRig, elements: HeroSequenceElements):
   if (before) restoreViewport(before);
   addEventListener("resize", onResize);
 
-  // Keyboard focus on the frame's link brings back the Beat it belongs to, the intro, at
-  // once, rather than leaving it faded out or wiped away (DESIGN.md § Accessibility).
-  const onFocus = (event: FocusEvent) => {
-    if (!trigger || !scrolledIn(trigger) || !(event.target as Element).matches(":focus-visible")) return;
-    window.scrollTo({ top: Math.max(trigger.start, 0), behavior: "instant" });
-    ScrollTrigger.update();
-    trigger.getTween()?.progress(1);
-  };
-  pinned.addEventListener("focusin", onFocus);
-
   const showEntrance = () => {
     const { y, scale, rotZ } = rig.entrance;
     poster.style.transform = `translateY(${-y * pixelsPerUnit(poster.offsetHeight)}px) rotate(${-rotZ}rad) scale(${scale})`;
@@ -151,7 +141,6 @@ export function startHeroSequence(rig: HeroRig, elements: HeroSequenceElements):
     skipEntrance,
     stop: () => {
       removeEventListener("resize", onResize);
-      pinned.removeEventListener("focusin", onFocus);
       clearTimeout(settle);
       entrance?.progress(1).kill();
       context?.revert();

@@ -21,7 +21,11 @@ const badgePlace = [
 
 const display = "font-display leading-[0.9] tracking-[-0.02em]";
 
-const splitLine = `${display} text-[clamp(2.25rem,7vw,4.5rem)] leading-[0.95]`;
+const splitLine = `${display} text-[clamp(2.25rem,7vw,4.5rem)]`;
+
+/** All animated headlines share the opening headline's scale and rhythm. */
+const headlineSize = "vitrine:text-[clamp(3.5rem,min(10vw,17svh),9rem)] max-sm:vitrine:text-[17vw]";
+const headlineWidth = "vitrine:max-w-[88vw] max-sm:vitrine:max-w-[calc(100vw-2.5rem)]";
 
 /** The Vitrine's gutters: the sides of the frame, and its top and bottom once the header has scrolled away. */
 const left = "vitrine:left-[6vw] max-sm:vitrine:left-5";
@@ -31,12 +35,6 @@ const bottom = "vitrine:bottom-[12svh] max-sm:vitrine:bottom-[9svh]";
 
 /** Copy waiting for its Beat is not painted until the timeline brings it in. */
 const waiting = "vitrine:opacity-0";
-
-/** The intro's two corner lines, in front of the object at the bottom of the frame. */
-const cornerLine = `vitrine:absolute vitrine:z-20 vitrine:m-0 ${bottom} vitrine:max-w-64 vitrine:animate-settle max-sm:vitrine:max-w-[42vw] max-sm:vitrine:text-[13px] max-sm:vitrine:leading-snug`;
-
-/** The split headline's size in the Vitrine: set in `vw` on phones, so a line never overflows. */
-const splitSize = "vitrine:text-[clamp(3rem,min(8vw,15svh),7.5rem)] max-sm:vitrine:text-[15vw]";
 
 /**
  * The Hero. In Static, the poster plus every Beat's Copy in normal page flow.
@@ -63,47 +61,30 @@ export function Hero() {
             <div data-vitrine="intro" className="vitrine:relative vitrine:z-0 vitrine:animate-settle vitrine:[animation-delay:0.5s]">
               <h1
                 id="hero-heading"
-                className={`origin-bottom-right -rotate-2 ${display} text-[clamp(3rem,12vw,8.5rem)] vitrine:max-w-[5em] vitrine:text-[clamp(3.5rem,min(10vw,17svh),9rem)] max-sm:vitrine:text-[17vw]`}>
+                className={`origin-bottom-right -rotate-2 ${display} text-[clamp(3rem,12vw,8.5rem)] vitrine:max-w-[5em] ${headlineSize}`}>
                 {opening.headline}
               </h1>
               <BrushUnderline className="mt-3 h-5 w-[70%] -rotate-2 max-sm:vitrine:mt-1 max-sm:vitrine:h-3" />
             </div>
-            <div
-              data-vitrine="intro"
-              className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 vitrine:relative vitrine:z-20 vitrine:mt-6 vitrine:flex-col vitrine:items-start vitrine:gap-y-3 vitrine:animate-settle vitrine:[animation-delay:0.65s] max-sm:vitrine:mt-4 max-sm:vitrine:gap-y-2 has-focus-visible:opacity-100!">
-              <a
-                href={opening.cta.href}
-                className="inline-flex min-h-11 items-center rounded-board bg-letreiro px-6 py-3 font-display text-xl text-polpa shadow-board max-sm:vitrine:px-4 max-sm:vitrine:py-2 max-sm:vitrine:text-lg">
-                {opening.cta.label}
-              </a>
-              <p className="text-fibra/80 max-sm:vitrine:text-[13px]">{opening.scrollCue}</p>
-            </div>
           </div>
-          <div className="space-y-3 text-lg md:text-right vitrine:contents">
-            <p
-              data-vitrine="intro"
-              className={`${cornerLine} ${left} vitrine:[animation-delay:0.8s]`}>
-              {opening.corner}
-            </p>
-            <p
-              data-vitrine="intro"
-              className={`${cornerLine} ${right} vitrine:text-right vitrine:[animation-delay:0.95s]`}>
-              {opening.oppositeCorner}
-            </p>
-          </div>
+          <p
+            data-vitrine="intro"
+            className={`${display} text-[clamp(1.5rem,3vw,3rem)] md:text-right vitrine:absolute vitrine:z-20 vitrine:m-0 ${bottom} ${right} vitrine:max-w-[44vw] vitrine:text-right vitrine:animate-settle vitrine:[animation-delay:0.8s] max-sm:vitrine:max-w-[72vw]`}>
+            {opening.oppositeCorner}
+          </p>
         </div>
 
         {/* Facão: the split headline sits around the object, one line behind it and one in front */}
         <div className="mt-16 grid items-center gap-8 md:grid-cols-[1fr_auto_1fr] vitrine:contents">
           <p
             data-vitrine="opened"
-            className={`${splitLine} md:text-right vitrine:absolute vitrine:z-0 ${top} ${left} vitrine:max-w-[5em] vitrine:-rotate-1 vitrine:text-left ${splitSize} ${waiting}`}>
+            className={`${splitLine} md:text-right vitrine:absolute vitrine:z-0 ${top} ${left} ${headlineWidth} vitrine:-rotate-2 vitrine:text-left ${headlineSize} ${waiting}`}>
             {opened.headline[0]}
           </p>
           <HeroPoster />
           <p
             data-vitrine="opened"
-            className={`${splitLine} vitrine:absolute vitrine:z-20 ${bottom} ${right} vitrine:rotate-1 vitrine:text-right ${splitSize} ${waiting}`}>
+            className={`${splitLine} vitrine:absolute vitrine:z-20 ${bottom} ${right} ${headlineWidth} vitrine:-rotate-2 vitrine:text-right ${headlineSize} ${waiting}`}>
             {opened.headline[1]}
           </p>
         </div>
@@ -132,7 +113,7 @@ export function Hero() {
         <div className="mt-16 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end vitrine:contents">
           <p
             data-vitrine="closing"
-            className={`${display} text-[clamp(2rem,6vw,4rem)] leading-[0.95] vitrine:absolute vitrine:z-0 ${top} ${left} vitrine:max-w-[min(44vw,9em)] vitrine:-rotate-2 vitrine:text-[clamp(2.5rem,min(6vw,11svh),5.5rem)] max-sm:vitrine:right-5 max-sm:vitrine:max-w-none max-sm:vitrine:text-[11.5vw] ${waiting}`}>
+            className={`${splitLine} vitrine:absolute vitrine:z-0 ${top} ${left} vitrine:max-w-[min(60vw,6em)] vitrine:-rotate-2 max-sm:vitrine:right-5 max-sm:vitrine:max-w-none ${headlineSize} ${waiting}`}>
             {rotatingCan.headline}
           </p>
           <div
