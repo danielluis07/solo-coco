@@ -115,6 +115,13 @@ for (const tier of ["static", "moving"] as const) {
     if (tier === "moving") await expect(html(page)).toHaveClass(/\blenis\b/);
 
     for (const [name, link, heading] of anchorLinks(page)) {
+      // Outside Static the Hero's link shows with the intro, at the top of the Vitrine,
+      // which a scroll to its place in the layout would not bring back. Lenis finishes
+      // the last glide first, as it would override a jump made mid-glide.
+      if (tier === "moving" && name.startsWith("Hero")) {
+        await expect(html(page)).not.toHaveClass(/\blenis-scrolling\b/);
+        await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+      }
       await link.click();
       const destination = page.getByRole("heading", { name: heading, exact: true });
       await expect(destination, name).toBeFocused();

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* The Vitrine: the pinned, layered Hero outside Static (DESIGN.md § Hero choreography).
+   The page is marked before its first paint (lib/motion-signals.ts) and drops the
+   layout as soon as it is Static. `:is` outranks the in-flow Static utilities. */
+@custom-variant vitrine (&:is(html[data-hero-layout="vitrine"]:not([data-motion-tier="static"]) *));
+
 /* Letreiro skin. Values from DESIGN.md § Brand core and § Visual direction. */
 @theme inline {
   --font-display: var(--font-bowlby-one);
@@ -28,6 +33,15 @@
   /* Uneven corners, as if the board was cut by hand. */
   --radius-board: 18px 10px 16px 8px;
   --radius-board-alt: 10px 16px 8px 18px;
+
+  /* The intro Copy settles in from the first paint, unhurried, while the coconut rises. */
+  --animate-settle: settle 1.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  @keyframes settle {
+    from {
+      opacity: 0;
+      translate: 0 40px;
+    }
+  }
 
   /* Quick-add reveal: content fades in, layout reflows immediately. */
   --animate-fade-in: fade-in 180ms ease-out;

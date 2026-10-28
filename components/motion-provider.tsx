@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { anchorTargetOf, goToAnchor } from "@/lib/anchor-navigation";
-import { readMotionInputs, reducedMotionQuery, rememberOptOut } from "@/lib/motion-signals";
+import { markVitrineLayout, readMotionInputs, reducedMotionQuery, rememberOptOut } from "@/lib/motion-signals";
 import {
   initialMotionState,
   motionOutput,
@@ -32,9 +32,19 @@ let state: MotionState | null = null;
 let beforeStatic: ViewportSnapshot | null = null;
 const listeners = new Set<() => void>();
 
+// What React sees: changes only with the tier or the loading signal, so the policy's
+// own bookkeeping (such as counting low-fps windows mid-scroll) never re-renders the page.
+let output: MotionOutput | null = null;
+
 function currentState() {
   state ??= initialMotionState(readMotionInputs());
   return state;
+}
+
+function currentOutput() {
+  const next = motionOutput(currentState());
+  if (output?.tier !== next.tier || output.startLoading !== next.startLoading) output = next;
+  return output;
 }
 
 /** Sends a runtime event to the policy. */
@@ -72,8 +82,7 @@ export function useMotion() {
 
 export function MotionProvider({ children }: { children: ReactNode }) {
   // The server knows nothing about the visitor, so it renders the undecided state.
-  const policy = useSyncExternalStore(subscribe, currentState, () => null);
-  const motion = policy && motionOutput(policy);
+  const motion = useSyncExternalStore(subscribe, currentOutput, () => null);
   const tier = motion?.tier ?? null;
   const moving = tier !== null && tier !== "static";
   const smooth = useRef<SmoothScroll | null>(null);
@@ -87,9 +96,17 @@ export function MotionProvider({ children }: { children: ReactNode }) {
     return () => query.removeEventListener("change", onChange);
   }, []);
 
-  useEffect(() => {
+  // A layout effect, ahead of the Static hand-over below: the tier decides the Hero's
+  // layout in CSS, so the page must be laid out as Static before its position is restored.
+  useLayoutEffect(() => {
     if (tier) document.documentElement.dataset.motionTier = tier;
   }, [tier]);
+
+  // The inline script in the layout set this before the first paint; put it back
+  // if React's development remount cleared it. A no-op in production.
+  useLayoutEffect(() => {
+    if (moving) markVitrineLayout();
+  }, [moving]);
 
   // Lenis runs only outside Static, and is loaded only once that is known.
   useEffect(() => {

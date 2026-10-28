@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { handCutPath } from "@/lib/hand-cut";
 
 // Stand-ins for the hand-lettered wordmark and the machete-cut symbol until the
 // final artwork arrives. Both are decorative apart from the wordmark's text.
@@ -60,6 +61,20 @@ export function BrushUnderline({ className = "" }: { className?: string }) {
         strokeLinecap="round"
         fill="none"
       />
+    </svg>
+  );
+}
+
+/** The dark Fibra statement's uneven, hand-cut top edge (lib/hand-cut.ts). */
+export function HandCutEdge({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 1200 24"
+      preserveAspectRatio="none"
+      className={`fill-fibra ${className}`}
+      aria-hidden="true"
+      focusable="false">
+      <path d={handCutPath} />
     </svg>
   );
 }

@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import stage from "@/assets/hero/stage.json";
 import { createHeroRig } from "./hero-rig";
-import { buildHeroTimeline, playEntrance } from "./hero-timeline";
+import { copy } from "@/content/page";
+import { buildHeroTimeline, meterStage, playEntrance } from "./hero-timeline";
+
+const { meterLabels } = copy.hero.transformation;
 
 const turn = Math.PI * 2;
 
@@ -83,6 +86,96 @@ describe("Hero timeline", () => {
     const { rig, timeline: t } = timeline();
     t.seek(92);
     expect(rig.can.rotY).toBeCloseTo(Math.PI, 5);
+  });
+
+  test("Girar: the intro Copy starts in place and has left upwards by unit 20", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(0);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1, 1, 1]);
+    t.seek(7);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([1, 1, 1, 1]);
+    t.seek(20);
+    expect(rig.copy.intro.map((piece) => piece.at)).toEqual([2, 2, 2, 2]);
+  });
+
+  test("Facão: the split headline arrives while the cap pries off, and leaves from unit 46", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(20);
+    expect(rig.copy.opened.map((piece) => piece.at)).toEqual([0, 0]);
+    t.seek(38);
+    expect(rig.copy.opened.map((piece) => piece.at)).toEqual([1, 1]);
+    t.seek(46);
+    expect(rig.copy.opened.map((piece) => piece.at)).toEqual([1, 1]);
+    t.seek(56);
+    expect(rig.copy.opened.map((piece) => piece.at)).toEqual([2, 2]);
+  });
+
+  test("Selos: the badges drift past one after another, from unit 38 to 56, while the coconut is open", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(38);
+    expect(rig.badges.map((badge) => badge.drift)).toEqual([0, 0, 0]);
+    t.seek(46);
+    const [first, middle, last] = rig.badges.map((badge) => badge.drift);
+    expect(first).toBeGreaterThan(middle);
+    expect(middle).toBeGreaterThan(last);
+    expect(last).toBeGreaterThan(0);
+    expect(rig.cap.lift).toBe(1);
+    t.seek(56);
+    expect(rig.badges.map((badge) => badge.drift)).toEqual([1, 1, 1]);
+  });
+
+  test("Virar lata: the meter counts 000 → 100 through its three labels between units 59 and 78", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(58);
+    expect(rig.meter.at).toBe(0);
+    const seen: string[] = [];
+    for (let unit = 60; unit <= 76; unit += 0.5) {
+      t.seek(unit);
+      const label = meterLabels[meterStage(rig.meter.count)];
+      if (seen.at(-1) !== label) seen.push(label);
+    }
+    expect(seen).toEqual(["Coco inteiro", "Chacoalhando", "Na lata"]);
+    t.seek(62);
+    expect(rig.meter.at).toBe(1);
+    expect(rig.meter.count).toBeGreaterThan(0);
+    t.seek(75);
+    expect(rig.meter.count).toBe(100);
+    t.seek(78);
+    expect(rig.meter.at).toBe(2);
+  });
+
+  test("Virar lata: the particle burst is at its thickest while the coconut becomes the can", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(65);
+    expect(rig.burst).toBe(0);
+    // The coconut goes and the can arrives between 68 and 69.
+    for (const unit of [68, 68.5, 69]) {
+      t.seek(unit);
+      expect(rig.burst).toBeGreaterThan(0.2);
+      expect(rig.burst).toBeLessThan(0.8);
+    }
+    t.seek(75);
+    expect(rig.burst).toBe(1);
+  });
+
+  test("Lata gira: the closing Copy arrives from unit 75 as the can turns", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(75);
+    expect(rig.copy.closing.map((piece) => piece.at)).toEqual([0, 0]);
+    t.seek(86);
+    expect(rig.copy.closing.map((piece) => piece.at)).toEqual([1, 1]);
+    expect(rig.can.rotY).toBeGreaterThan(0);
+    expect(rig.can.rotY).toBeLessThan(Math.PI);
+  });
+
+  test("Saída: the Fibra panel rises from unit 92 and covers the frame at 100", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(92);
+    expect(rig.panel.rise).toBe(0);
+    t.seek(96);
+    expect(rig.panel.rise).toBeGreaterThan(0);
+    t.seek(100);
+    expect(rig.panel.rise).toBe(1);
   });
 
   test("every Beat plays backwards to the first frame", () => {

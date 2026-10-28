@@ -25,6 +25,9 @@ export function startSmoothScroll(): SmoothScroll {
     // native scroll that lands mid-glide, which would send it to the old target.
     scrollTo: (target) => {
       const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      // Catch Lenis up first: after a native scroll mid-glide it still holds the old glide's
+      // target, and would take a link to that same place as already reached.
+      lenis.scrollTo(window.scrollY, { immediate: true, force: true });
       lenis.scrollTo(target.getBoundingClientRect().top + window.scrollY - margin, { force: true });
     },
     stop: () => {

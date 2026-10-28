@@ -28,9 +28,25 @@ export function rememberOptOut() {
   }
 }
 
+/** The data-saving signals, as one media query. */
+const reducedDataQuery = "(prefers-reduced-data: reduce)";
+
+/**
+ * Runs inline in `<head>`, before the first paint: lays the Hero out as the Vitrine
+ * unless the page is sure to be Static, so the pinned composition never shifts in
+ * after hydration. WebGL is left to the policy; a page it sends to Static drops the
+ * layout (the `vitrine` variant in globals.css). Mirrors `readMotionInputs`.
+ */
+export const heroLayoutScript = `(function(){try{var n=navigator.connection;if(matchMedia(${JSON.stringify(reducedMotionQuery)}).matches||matchMedia(${JSON.stringify(reducedDataQuery)}).matches||(n&&n.saveData)||sessionStorage.getItem(${JSON.stringify(optOutKey)})==="1")return;document.documentElement.dataset.heroLayout="vitrine"}catch(e){}})()`;
+
+/** Marks the page for the Vitrine again, as after React's development remount clears `<html>`. */
+export function markVitrineLayout() {
+  document.documentElement.dataset.heroLayout = "vitrine";
+}
+
 function readDataSaving(): boolean {
   const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-  return connection?.saveData === true || matchMedia("(prefers-reduced-data: reduce)").matches;
+  return connection?.saveData === true || matchMedia(reducedDataQuery).matches;
 }
 
 function readDeviceClass(): DeviceClass {

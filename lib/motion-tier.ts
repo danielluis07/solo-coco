@@ -93,7 +93,7 @@ export function nextMotionState(state: MotionState, event: MotionEvent): MotionS
       return state.load === "loading" ? { ...state, load: "ready" } : state;
     case "fps-measured": {
       if (state.load !== "ready") return state;
-      if (event.fps >= minFps) return { ...state, lowFpsWindows: 0 };
+      if (event.fps >= minFps) return state.lowFpsWindows === 0 ? state : { ...state, lowFpsWindows: 0 };
       const lowFpsWindows = state.lowFpsWindows + 1;
       if (lowFpsWindows < lowFpsWindowsToDowngrade) return { ...state, lowFpsWindows };
       const tier = stepDown[state.tier];

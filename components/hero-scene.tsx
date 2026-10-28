@@ -2,10 +2,11 @@
 
 import { Canvas, useThree } from "@react-three/fiber";
 import { gsap } from "gsap";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import type { PerspectiveCamera, Vector3 } from "three";
 import stage from "@/assets/hero/stage.json";
 import { createFpsSampler } from "@/lib/fps-sampler";
+import { createBurst, type HeroBurst } from "@/lib/hero-burst";
 import { loadHeroAssets, type HeroAssets } from "@/lib/hero-assets";
 import type { HeroRig } from "@/lib/hero-rig";
 import type { Tier } from "@/lib/motion-tier";
@@ -19,6 +20,9 @@ const fpsWarmUpMs = 1_000;
 
 /** Pixel-ratio cap per tier. */
 const pixelRatio = { full: 1.5, lite: 1 };
+
+/** Particles in the Virar lata burst: Lite's count, which Full shares until its dissolve arrives. */
+const burstParticles = 90;
 
 /**
  * How far the cap travels at full lift, in the coconut's own units: up, back, and tipped back (radians).
@@ -44,12 +48,20 @@ export type HeroSceneEvents = {
   onRendering: (rendering: boolean) => void;
 };
 
-type Props = HeroSceneEvents & { rig: HeroRig; tier: Exclude<Tier, "static"> };
+type Props = HeroSceneEvents & {
+  rig: HeroRig;
+  tier: Exclude<Tier, "static">;
+  /** The square the poster fills: the scene frames the object exactly as the poster does. */
+  poster: RefObject<HTMLElement | null>;
+};
 
-export default function HeroScene({ rig, tier, ...events }: Props) {
+export default function HeroScene({ rig, tier, poster, ...events }: Props) {
   return (
     <Canvas
       frameloop="never"
+      // Measured on resize only: by default R3F re-measures on every scroll, for pointer
+      // events this scene never takes, and that would re-render React as the visitor scrolls.
+      resize={{ scroll: false }}
       flat
       dpr={tier === "full" ? [1, pixelRatio.full] : pixelRatio.lite}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
@@ -58,13 +70,15 @@ export default function HeroScene({ rig, tier, ...events }: Props) {
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <hemisphereLight args={[stage.hemisphere.sky, stage.hemisphere.ground, stage.hemisphere.intensity]} />
       <directionalLight position={stage.sun.position as [number, number, number]} intensity={stage.sun.intensity} />
-      <Driver rig={rig} {...events} />
+      <Driver rig={rig} poster={poster} {...events} />
     </Canvas>
   );
 }
 
+type DriverProps = HeroSceneEvents & Pick<Props, "rig" | "poster">;
+
 /** Loads the assets, then renders whenever the rig moves while the Hero is in view. */
-function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
+function Driver({ rig, poster, ...props }: DriverProps) {
   const store = useThree((state) => state.get);
   // The latest callbacks, without restarting the loop when the parent re-renders.
   const events = useRef(props);
@@ -75,6 +89,7 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
   useEffect(() => {
     const { gl, scene, camera, advance } = store();
     let assets: HeroAssets | null = null;
+    let burst: HeroBurst | null = null;
     let stopped = false;
     let failed = false;
     const fail = () => {
@@ -92,6 +107,13 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
       visible = entry.isIntersecting;
     });
     observer.observe(canvas);
+
+    // The poster's square, which the camera keeps framed whatever the canvas size.
+    let square = 0;
+    const measure = new ResizeObserver(() => {
+      square = poster.current?.offsetWidth ?? 0;
+    });
+    if (poster.current) measure.observe(poster.current);
 
     const sampler = createFpsSampler({ warmUpMs: fpsWarmUpMs, onWindow: (fps) => events.current.onFps(fps) });
     let rendering = true;
@@ -112,11 +134,12 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
         return;
       }
       const { size } = store();
-      const key = [...frameKey(rig), size.width, size.height];
+      const key = [...frameKey(rig), size.width, size.height, square];
       const moving = rig.shake > 0 || key.some((value, i) => value !== renderedKey[i]);
       renderedKey = key;
       if (moving) {
         pose(assets, capRest!, rig, seconds);
+        burst!.pose(rig.burst);
         render(now);
       }
       sampler.tick(now, moving);
@@ -124,7 +147,7 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
 
     const render = (now: number) => {
       try {
-        frameStage(camera as PerspectiveCamera, store().size);
+        frameStage(camera as PerspectiveCamera, store().size, square);
         advance(now);
       } catch {
         fail();
@@ -135,6 +158,7 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
       stopped = true;
       gsap.ticker.remove(tick);
       observer.disconnect();
+      measure.disconnect();
       canvas.removeEventListener("webglcontextlost", fail);
     }
 
@@ -143,8 +167,10 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
         if (stopped) return loaded.dispose();
         assets = loaded;
         capRest = loaded.coconut.top.position.clone();
-        scene.add(loaded.coconut.root, loaded.can);
+        burst = createBurst(burstParticles);
+        scene.add(loaded.coconut.root, loaded.can, burst.mesh);
         pose(loaded, capRest, rig, 0);
+        burst.pose(rig.burst);
         // Compile before the first frame, so it is complete when it lands.
         await gl.compileAsync(scene, camera);
         if (stopped) return;
@@ -166,18 +192,24 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
         scene.remove(assets.coconut.root, assets.can);
         assets.dispose();
       }
+      if (burst) {
+        scene.remove(burst.mesh);
+        burst.dispose();
+      }
     };
-  }, [store, rig]);
+  }, [store, rig, poster]);
 
   return null;
 }
 
 /**
- * The canvas is as wide as the square stage and taller, so widen the view to keep
- * the stage framed exactly as the poster: same camera, same centre, only more around it.
+ * The canvas covers the frame around the poster's square, centred on it, so widen the
+ * view to keep the square framed exactly as the poster: same camera, same centre,
+ * only more around it.
  */
-function frameStage(camera: PerspectiveCamera, { width, height }: { width: number; height: number }) {
-  const fov = (2 * Math.atan((height / width) * Math.tan((stage.camera.fov * Math.PI) / 360)) * 180) / Math.PI;
+function frameStage(camera: PerspectiveCamera, { width, height }: { width: number; height: number }, square: number) {
+  const side = square || width;
+  const fov = (2 * Math.atan((height / side) * Math.tan((stage.camera.fov * Math.PI) / 360)) * 180) / Math.PI;
   if (camera.fov === fov) return;
   camera.fov = fov;
   camera.updateProjectionMatrix();
@@ -185,7 +217,7 @@ function frameStage(camera: PerspectiveCamera, { width, height }: { width: numbe
 
 /** Every rig value a frame depends on; a frame is drawn only when one changes. */
 function frameKey(rig: HeroRig) {
-  const { coconut, cap, can, entrance } = rig;
+  const { coconut, cap, can, entrance, burst } = rig;
   return [
     coconut.y,
     coconut.scale,
@@ -197,6 +229,7 @@ function frameKey(rig: HeroRig) {
     entrance.y,
     entrance.scale,
     entrance.rotZ,
+    burst,
   ];
 }
 

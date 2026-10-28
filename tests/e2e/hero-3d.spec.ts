@@ -7,6 +7,8 @@ import { copy } from "@/content/page";
 const html = (page: Page) => page.locator("html");
 const stage = (page: Page) => page.locator("[data-hero-stage]");
 const canvas = (page: Page) => stage(page).locator("canvas");
+// The object’s square: what stays in place when the pinned Hero is released into Static.
+const poster = (page: Page) => stage(page).locator("[data-hero-poster]");
 const toggle = (page: Page) =>
   page.getByRole("banner").getByRole("button", { name: copy.header.motionOff, exact: true });
 
@@ -43,11 +45,11 @@ async function scrollToUnit(page: Page, unit: number) {
   }, unit);
 }
 
-/** The pinned stage is in place and holding still. */
+/** The pinned stage is in place and holding still; where its poster sits on screen. */
 async function pinnedStageTop(page: Page) {
   await expect(stage(page)).toHaveAttribute("data-pinned", "true");
   await expect(page.locator(".pin-spacer [data-hero-pin]")).toHaveCount(1);
-  return (await stage(page).boundingBox())!.y;
+  return (await poster(page).boundingBox())!.y;
 }
 
 async function phone(browser: Browser) {
@@ -184,7 +186,7 @@ test("losing the WebGL context mid-scroll switches to Static, releases the pin a
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await expect(stage(page)).toHaveAttribute("data-hero-stage", "poster");
   await expect(stage(page).locator("img")).toBeInViewport();
-  expect(Math.abs((await stage(page).boundingBox())!.y - top)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await poster(page).boundingBox())!.y - top)).toBeLessThanOrEqual(1);
 });
 
 test("“Desativar animações” midway through the pinned Hero releases the pin and keeps position and focus", async ({
@@ -204,7 +206,7 @@ test("“Desativar animações” midway through the pinned Hero releases the pi
   await expect(toggle(page)).toBeFocused();
   await expect(page.locator(".pin-spacer")).toHaveCount(0);
   await expect(canvas(page)).toHaveCount(0);
-  expect(Math.abs((await stage(page).boundingBox())!.y - top)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await poster(page).boundingBox())!.y - top)).toBeLessThanOrEqual(1);
 });
 
 test("scrolling past the Hero before 3D is ready keeps the visitor's position and skips the entrance", async ({
