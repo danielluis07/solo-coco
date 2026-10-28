@@ -117,6 +117,7 @@ export const copy = {
     wordmark: brand,
     nav: [toStatement("O coco"), toGrid("Sabores")],
     cta: toGrid("Ver sabores"),
+    motionOff: "Desativar animações",
   },
 
   hero: {

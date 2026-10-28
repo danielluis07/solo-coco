@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import "lenis/dist/lenis.css";
 import "./globals.css";
+import { MotionProvider } from "@/components/motion-provider";
 import { bowlbyOne, figtree } from "@/fonts";
 import { seo } from "@/content/page";
 
@@ -61,7 +63,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </>
         )}
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }
