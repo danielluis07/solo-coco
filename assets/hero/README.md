@@ -29,7 +29,7 @@ The outputs go to `public/hero/` and are committed. Intermediates go to `assets/
 
 | File | What it is |
 |------|------------|
-| `build_hero.py` | Blender Python script. It lathes the can and adds its tab, with one rectangular UV strip on `Body_Label`. It shapes the whole coconut (a mature brown coconut, oval and lying on its side) and paints its fibrous husk colour and normal maps procedurally. It splits it through the middle along a zigzag crack, lines both halves with a white flesh shell, fills the bottom half with coconut water, and pivots both halves on the crack line. It renders the poster. |
+| `build_hero.py` | Blender Python script. It lathes the can and adds its tab, with one rectangular UV strip on `Body_Label`. It shapes the whole coconut (a mature brown coconut, oval and lying on its side) and paints its husk procedurally: fibre bundles, cords and frizz following a wandering grain, fissures, torn and worn patches and pale chips, with matted caps on the ends. The husk's wide grooves displace the mesh itself; the finer relief goes in the normal map. It splits the coconut through the middle along a zigzag crack, lines both halves with the brown nut shell and the white flesh, gives the bottom half the coconut water's vessel (`Liquid`), and pivots both halves on the crack line. It renders the poster. |
 | `stage.json` | The camera, lights and first-frame pose, shared by the poster render and the live scene (`components/hero-scene.tsx`), so the poster is the first 3D frame. |
 | `label-so-o-coco.svg` | The Só o Coco can label (DESIGN.md § Can label: Barraca). Generated from the shared Barraca template with the final wordmark and symbol. |
 | `fonts/` | Bowlby One and Figtree, used to rasterise the label. |
@@ -52,7 +52,7 @@ See `assets/brand/PROFILE.md` for local validation and the physical-device proce
 
 | Output | Contents | Budget |
 |--------|----------|--------|
-| `coconut.glb` | Nodes `Coconut` (whole), `Coconut_Top` (the cap) and `Coconut_Bottom` (holding the coconut water). The halves pivot on the crack line at the back. Materials `Husk` (colour and normal maps), `Husk_Inner`, `Flesh` and `Liquid`, which takes its reflections at runtime. | 10–25k triangles; textures 1–2k |
+| `coconut.glb` | Nodes `Coconut` (whole), `Coconut_Top` (the cap) and `Coconut_Bottom`, with its child `Liquid`. The halves pivot on the crack line at the back. Materials `Husk` (colour and normal maps), `Husk_Inner`, `Shell` and `Flesh`. `Liquid` is the coconut water's vessel: the flesh's hollow up to the highest a slosh may reach, with its origin on the still surface and the hollow's ellipsoid in its extras (`center`, `radii`, `top`). The live scene draws the water in it (`lib/hero-liquid.ts`). | 50–90k triangles whole, 50–120k for the halves; colour 4096 × 2048, normals 2048 × 1024 |
 | `can.glb` | Nodes `Can` and `Tab`. Materials `Body_Label` (the label UV strip, with no image) and `Metal`. | 2–6k triangles |
 | `label-so-o-coco.ktx2` | The Só o Coco label, swapped onto `Body_Label` at runtime (`flipY = false`, sRGB). | 2048 × 1024 |
 | `poster.png` | The first 3D frame, 1024 × 1024 with a transparent background. | |

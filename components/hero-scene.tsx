@@ -120,6 +120,7 @@ function Driver({ rig, poster, ...props }: DriverProps) {
     let renderedKey: number[] = [];
     // The cap's place on the crack line, where every lift starts from.
     let capRest: Vector3 | null = null;
+    let open = false;
 
     const tick = (seconds: number) => {
       if (!assets) return;
@@ -135,10 +136,17 @@ function Driver({ rig, poster, ...props }: DriverProps) {
       }
       const { size } = store();
       const key = [...frameKey(rig), size.width, size.height, square];
-      const moving = rig.shake > 0 || key.some((value, i) => value !== renderedKey[i]);
+      const posed = rig.shake > 0 || key.some((value, i) => value !== renderedKey[i]);
       renderedKey = key;
+      if (posed) pose(assets, capRest!, rig, seconds);
+      const { liquid, bottom } = assets.coconut;
+      // The cap cracking off jolts the water.
+      if (rig.cap.lift > 0 && !open) liquid.crack();
+      open = rig.cap.lift > 0;
+      // The water carries on moving after the coconut stops, until it settles.
+      const sloshing = liquid.update(seconds, camera) && bottom.visible;
+      const moving = posed || sloshing;
       if (moving) {
-        pose(assets, capRest!, rig, seconds);
         burst!.pose(rig.burst);
         render(now);
       }
@@ -170,6 +178,7 @@ function Driver({ rig, poster, ...props }: DriverProps) {
         burst = createBurst(burstParticles);
         scene.add(loaded.coconut.root, loaded.can, burst.mesh);
         pose(loaded, capRest, rig, 0);
+        loaded.coconut.liquid.update(0, camera);
         burst.pose(rig.burst);
         // Compile before the first frame, so it is complete when it lands.
         await gl.compileAsync(scene, camera);
