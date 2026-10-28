@@ -1,0 +1,9 @@
+{
+  "$comment": "The Hero's fixed camera, lights and first-frame pose, in three.js units (Y up). Read by build_hero.py for the poster and by the live scene, so the poster is the first 3D frame.",
+  "camera": { "fov": 35, "position": [0, 0, 6] },
+  "hemisphere": { "sky": "#ffffff", "ground": "#3a2a1d", "intensity": 1.6 },
+  "sun": { "position": [-3, 4, 5], "intensity": 3.2 },
+  "coconut": { "scale": 1, "rotY": 0.5 },
+  "can": { "scale": 1 },
+  "posterSize": 1024
+}

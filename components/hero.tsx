@@ -1,5 +1,8 @@
+import Image from "next/image";
 import { copy } from "@/content/page";
-import { BrushUnderline, CocoSymbol } from "./brand";
+import poster from "@/public/hero/poster.png";
+import { BrushUnderline } from "./brand";
+import { HeroStage } from "./hero-stage";
 
 const { opening, opened, transformation, rotatingCan } = copy.hero;
 
@@ -40,8 +43,8 @@ export function Hero() {
         <p className="text-fibra/80">{opening.scrollCue}</p>
       </div>
 
-      {/* Facão / Selos: the split headline sits around the poster */}
-      <div className="mt-16 grid items-center gap-8 md:grid-cols-[1fr_auto_1fr]">
+      {/* Facão / Selos: the split headline sits around the poster; outside Static this row pins */}
+      <div data-hero-pin className="mt-16 grid items-center gap-8 md:grid-cols-[1fr_auto_1fr]">
         <p className={`${splitLine} md:text-right`}>{opened.headline[0]}</p>
         <HeroPoster />
         <p className={splitLine}>{opened.headline[1]}</p>
@@ -78,13 +81,14 @@ export function Hero() {
   );
 }
 
-/** Placeholder poster until the rendered Hero poster is delivered. */
+/**
+ * The poster is the scripted render of the first 3D frame (assets/hero/build_hero.py).
+ * Outside Static the live scene replaces it in the same box, so nothing shifts.
+ */
 function HeroPoster() {
   return (
-    <div
-      aria-hidden="true"
-      className="mx-auto grid aspect-square w-full max-w-sm place-items-center rounded-board bg-isopor shadow-board">
-      <CocoSymbol className="w-3/5" />
-    </div>
+    <HeroStage>
+      <Image src={poster} alt="" loading="eager" sizes="(min-width: 24rem) 24rem, 100vw" className="size-full" />
+    </HeroStage>
   );
 }

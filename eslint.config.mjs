@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // three's vendored Basis transcoder, copied by scripts/build-hero-assets.ts.
+    "public/hero/basis/**",
   ]),
 ]);
 

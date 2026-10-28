@@ -298,6 +298,8 @@ test("selections are kept per Flavour and reset on reload", async ({ page }) => 
 });
 
 test("nothing is bought: Quick-add makes no network requests", async ({ page }) => {
+  // The Hero's deferred 3D loading starts once the page is idle; let it finish first.
+  await expect(page.locator("[data-hero-stage]")).toHaveAttribute("data-hero-stage", "3d", { timeout: 15_000 });
   await page.waitForLoadState("networkidle");
   const requests: string[] = [];
   page.on("request", (r) => requests.push(r.url()));

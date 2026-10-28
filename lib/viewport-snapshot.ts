@@ -9,7 +9,9 @@ export type ViewportSnapshot = {
 };
 
 export function captureViewport(): ViewportSnapshot {
-  const hit = document.elementFromPoint(innerWidth / 2, innerHeight / 4);
+  let hit = document.elementFromPoint(innerWidth / 2, innerHeight / 4);
+  // A pin's spacer goes away with the pin; the pinned element stays.
+  if (hit?.classList.contains("pin-spacer")) hit = hit.firstElementChild;
   const anchor = hit && hit !== document.body && hit !== document.documentElement ? hit : null;
   return {
     anchor,
