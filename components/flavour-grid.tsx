@@ -1,14 +1,14 @@
+import type { CSSProperties } from "react";
 import {
   anchors,
   brand,
   copy,
-  defaultPack,
   flavours,
   flavourStats,
-  packLabel,
   type Flavour,
 } from "@/content/page";
 import { CanPlaceholder } from "./brand";
+import { QuickAdd, QuickAddProvider } from "./quick-add";
 
 const { grid } = copy;
 
@@ -16,6 +16,9 @@ const inkClass: Record<Flavour["ink"], string> = {
   fibra: "text-fibra",
   polpa: "text-polpa",
 };
+
+// Resting tilts in reading order: small and deliberately irregular.
+const tilts = ["-1deg", "0.6deg", "-0.4deg", "1.1deg", "-0.8deg", "0.3deg"];
 
 export function FlavourGrid() {
   return (
@@ -30,26 +33,31 @@ export function FlavourGrid() {
         <p className="text-lg">{grid.intro}</p>
         <p className="rounded-board-alt bg-isopor px-3 py-1 text-sm font-semibold">{grid.disclosure}</p>
       </div>
-      <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {flavours.map((flavour) => (
-          <li key={flavour.slug}>
-            <FlavourCard flavour={flavour} />
-          </li>
-        ))}
-      </ul>
+      <QuickAddProvider>
+        <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {flavours.map((flavour, i) => (
+            <li key={flavour.slug}>
+              <FlavourCard flavour={flavour} tilt={tilts[i % tilts.length]} />
+            </li>
+          ))}
+        </ul>
+      </QuickAddProvider>
     </section>
   );
 }
 
-/** A painted price sign. Static: no tilt, no transitions. */
-function FlavourCard({ flavour }: { flavour: Flavour }) {
+/**
+ * A painted price sign. Rests on a small tilt and settles to 0° on hover or
+ * focus within; under reduced motion it stays untilted with no transitions.
+ */
+function FlavourCard({ flavour, tilt }: { flavour: Flavour; tilt: string }) {
   const headingId = `flavour-${flavour.slug}`;
   return (
     <article
       aria-labelledby={headingId}
       data-flavour={flavour.slug}
-      style={{ backgroundColor: flavour.accent }}
-      className={`${inkClass[flavour.ink]} flex h-full flex-col rounded-board p-6 shadow-board`}>
+      style={{ backgroundColor: flavour.accent, "--tilt": tilt } as CSSProperties}
+      className={`${inkClass[flavour.ink]} flex h-full flex-col rounded-board p-6 shadow-board motion-safe:rotate-(--tilt) motion-safe:transition-[rotate] motion-safe:duration-240 motion-safe:ease-out motion-safe:hover:rotate-0 motion-safe:focus-within:rotate-0`}>
       <CanPlaceholder accent={flavour.accent} className="mx-auto h-40 w-auto" />
       <h3 id={headingId} className="mt-5 font-display leading-[0.95]">
         <span className="block font-sans text-sm font-bold tracking-wide uppercase">{brand}</span>{" "}
@@ -58,7 +66,7 @@ function FlavourCard({ flavour }: { flavour: Flavour }) {
       <p className="mt-2 leading-snug">{flavour.descriptor}</p>
       <p className="mt-4 text-sm font-semibold tabular-nums">{flavourStats(flavour)}</p>
       <p className="text-sm">{grid.perCan}</p>
-      <p className="mt-auto pt-5 font-display text-xl tabular-nums">{packLabel(defaultPack)}</p>
+      <QuickAdd flavour={flavour} />
     </article>
   );
 }

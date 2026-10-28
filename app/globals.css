@@ -28,6 +28,14 @@
   /* Uneven corners, as if the board was cut by hand. */
   --radius-board: 18px 10px 16px 8px;
   --radius-board-alt: 10px 16px 8px 18px;
+
+  /* Quick-add reveal: content fades in, layout reflows immediately. */
+  --animate-fade-in: fade-in 180ms ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
 }
 
 /* Painted-board grain: fractal noise at about 9% Fibra. */
