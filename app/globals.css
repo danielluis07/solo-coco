@@ -62,12 +62,6 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.98 0 0 0 0 0.98 0 0 0 0 0.96 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* The uneven, hand-cut top edge of the Saída panel: the statement's cut
-   (components/brand.tsx) as a clip, so the grain runs right up to it. */
-@utility clip-hand-cut {
-  clip-path: polygon(0 14px, 11.667% 9px, 25.833% 16px, 39.167% 6px, 53.333% 13px, 68.333% 4px, 82.5% 12px, 100% 7px, 100% 100%, 0 100%);
-}
-
 @layer base {
   body {
     @apply bg-polpa bg-grain font-sans text-fibra;

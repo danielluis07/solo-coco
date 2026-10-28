@@ -43,8 +43,9 @@ export function Statement() {
     <section
       id={anchors.statement}
       aria-labelledby="statement-heading"
-      className="relative scroll-mt-4 bg-fibra bg-grain-dark text-polpa">
-      {/* In the Vitrine the Hero's Saída panel brings the cut, and this section runs on from it. */}
+      // In the Vitrine this slides up beneath the Hero's last screen, so its pinned sequence
+      // begins as Saída finishes wiping the Hero away with the same hand-cut edge.
+      className="relative scroll-mt-4 bg-fibra bg-grain-dark text-polpa vitrine:-mt-[100svh]">
       <HandCutEdge className="absolute inset-x-0 -top-[23px] h-6 w-full vitrine:hidden" />
       <div ref={pinned}>
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 sm:py-28">

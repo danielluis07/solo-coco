@@ -39,15 +39,15 @@ export function buildHeroTimeline(rig: HeroRig) {
       // The second headline arrives split across the layers, around the open coconut.
       .to(copy.opened, { at: 1, duration: 6, stagger: 1.5, ease: "power2.out" }, 24)
       // Selos: the badges drift up past the open coconut, one after another.
-      .to(badges, { drift: 1, duration: 14, stagger: 2.5 }, 37)
+      .to(badges, { drift: 1, duration: 13, stagger: 2.5 }, 38)
       .to(copy.opened, { at: 2, duration: 6, stagger: 1, ease: "power1.in" }, 46)
       // Fechar: the cap comes back and the coconut levels out.
       .to(cap, { lift: 0, duration: 6, ease: "power2.inOut" }, 56)
       .to(coconut, { rotX: 0, duration: 6, ease: "power2.inOut" }, 56)
-      // Virar lata: the meter counts the transformation from 59 to 78.
-      .to(meter, { at: 1, duration: 2 }, 59)
-      .to(meter, { count: 100, duration: 14 }, 60)
-      .to(meter, { at: 2, duration: 2 }, 78)
+      // Virar lata: the meter counts the transformation from 59 to 78, full as the can settles.
+      .to(meter, { at: 1, duration: 1.5 }, 59)
+      .to(meter, { count: 100, duration: 15 }, 60)
+      .to(meter, { at: 2, duration: 1.5 }, 76.5)
       // Shake, spin, and the scale-swap to the can behind the particle burst; the can counter-spins to its front.
       .to(rig, { shake: 1, duration: 5, ease: "power1.in" }, 62)
       .to(coconut, { rotY: `+=${Math.PI * 2}`, duration: 6, ease: "power2.in" }, 63)
@@ -57,10 +57,10 @@ export function buildHeroTimeline(rig: HeroRig) {
       .to(can, { scale: stage.can.scale, rotY: 0, duration: 6, ease: "power3.out" }, 68.5)
       // Lata gira: a headline arrives, and the can turns through 180° to its back label
       // under the short body line in the opposite corner.
-      .to(copy.closing[0], { at: 1, duration: 5, ease: "power2.out" }, 74)
+      .to(copy.closing[0], { at: 1, duration: 5, ease: "power2.out" }, 75)
       .to(can, { rotY: Math.PI, duration: 16, ease: "sine.inOut" }, 76)
       .to(copy.closing[1], { at: 1, duration: 4, ease: "power2.out" }, 80)
-      // Saída: the Fibra panel rises over the can and hands over to the brand statement.
+      // Saída: the brand statement's Fibra panel rises over the can, wiping the frame away onto it.
       .to(panel, { rise: 1, duration: 8, ease: "power2.inOut" }, 92)
   );
 }

@@ -110,9 +110,9 @@ describe("Hero timeline", () => {
     expect(rig.copy.opened.map((piece) => piece.at)).toEqual([2, 2]);
   });
 
-  test("Selos: the badges drift past one after another while the coconut is open", () => {
+  test("Selos: the badges drift past one after another, from unit 38 to 56, while the coconut is open", () => {
     const { rig, timeline: t } = timeline();
-    t.seek(37);
+    t.seek(38);
     expect(rig.badges.map((badge) => badge.drift)).toEqual([0, 0, 0]);
     t.seek(46);
     const [first, middle, last] = rig.badges.map((badge) => badge.drift);
@@ -124,7 +124,7 @@ describe("Hero timeline", () => {
     expect(rig.badges.map((badge) => badge.drift)).toEqual([1, 1, 1]);
   });
 
-  test("Virar lata: the meter counts 000 → 100 through its three labels, then goes", () => {
+  test("Virar lata: the meter counts 000 → 100 through its three labels between units 59 and 78", () => {
     const { rig, timeline: t } = timeline();
     t.seek(58);
     expect(rig.meter.at).toBe(0);
@@ -140,7 +140,7 @@ describe("Hero timeline", () => {
     expect(rig.meter.count).toBeGreaterThan(0);
     t.seek(75);
     expect(rig.meter.count).toBe(100);
-    t.seek(80);
+    t.seek(78);
     expect(rig.meter.at).toBe(2);
   });
 
@@ -158,9 +158,9 @@ describe("Hero timeline", () => {
     expect(rig.burst).toBe(1);
   });
 
-  test("Lata gira: the closing Copy arrives as the can turns", () => {
+  test("Lata gira: the closing Copy arrives from unit 75 as the can turns", () => {
     const { rig, timeline: t } = timeline();
-    t.seek(73);
+    t.seek(75);
     expect(rig.copy.closing.map((piece) => piece.at)).toEqual([0, 0]);
     t.seek(86);
     expect(rig.copy.closing.map((piece) => piece.at)).toEqual([1, 1]);

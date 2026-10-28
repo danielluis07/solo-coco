@@ -99,13 +99,8 @@ test("all seven Beats play in order and reverse cleanly on scroll-up", async ({ 
     ],
     // Lata gira: the closing Copy is in.
     [88, async () => expect.poll(() => shown(page, "closing")).toBe(true)],
-    // Saída: the Fibra panel covers the frame.
-    [
-      100,
-      async () => {
-        await expect.poll(async () => (await piece(page, "panel").boundingBox())!.y).toBeLessThanOrEqual(1);
-      },
-    ],
+    // Saída: the brand statement covers the frame.
+    [100, async () => expect.poll(() => statementRows(page)).toEqual([true, true, true, true])],
   ];
 
   for (const [unit, check] of beats) {
@@ -135,7 +130,8 @@ test("the meter counts 000 → 100 through its three labels", async ({ page }) =
 
 test("the split headline and the badges sit on both sides of the object", async ({ page }) => {
   await page.goto("/");
-  await expect3d(page);
+  // The layering is the Vitrine's own, with or without the 3D scene in yet.
+  await expect(page.locator("html")).toHaveAttribute("data-motion-tier", /^(full|lite)$/);
   const z = (selector: string) =>
     page.locator(selector).evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).zIndex)));
   const [object] = await z("[data-hero-stage]");
@@ -149,38 +145,38 @@ test("the split headline and the badges sit on both sides of the object", async 
   expect(last).toBeGreaterThan(object);
 });
 
-test("the Saída panel runs into the brand statement with no seam", async ({ page }) => {
-  await page.goto("/");
-  await expect3d(page);
-  await scrollToUnit(page, 100);
-  await expect.poll(async () => (await piece(page, "panel").boundingBox())!.y).toBeLessThanOrEqual(1);
-  // Past the pin, the panel and the statement scroll on together.
-  await page.mouse.wheel(0, 300);
-  await page.waitForTimeout(1_000);
-
-  const join = await page.evaluate((id) => {
-    const panel = document.querySelector<HTMLElement>('[data-vitrine="panel"]')!;
+/** For rows of points down the screen, whether what shows there belongs to the brand statement. */
+const statementRows = (page: Page) =>
+  page.evaluate((id) => {
     const statement = document.getElementById(id)!;
-    const look = (el: HTMLElement) => {
-      const style = getComputedStyle(el);
-      return { color: style.backgroundColor, grain: style.backgroundImage };
-    };
-    // Whatever the statement paints above its top edge must not show over the panel.
-    const above = Array.from(statement.children).filter((child) => {
-      const box = child.getBoundingClientRect();
-      return box.height > 0 && box.top < statement.getBoundingClientRect().top;
-    }).length;
-    return {
-      gap: statement.getBoundingClientRect().top - panel.getBoundingClientRect().bottom,
-      panel: look(panel),
-      statement: look(statement),
-      above,
-    };
+    return [0.05, 0.3, 0.7, 0.95].map((y) =>
+      [0.1, 0.5, 0.9].every((x) => statement.contains(document.elementFromPoint(innerWidth * x, innerHeight * y))),
+    );
   }, anchors.statement);
 
-  expect(Math.abs(join.gap)).toBeLessThanOrEqual(1);
-  expect(join.panel).toEqual(join.statement);
-  expect(join.above).toBe(0);
+test("Saída wipes the Hero away onto the brand statement, whose pinned sequence begins as it covers", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect3d(page);
+  const heading = page.getByRole("heading", { name: copy.statement.headline, exact: true });
+
+  // Halfway, the Fibra rising from the bottom is the statement itself, under a hand-cut edge.
+  await scrollToUnit(page, 96);
+  await expect.poll(() => statementRows(page)).toEqual([false, false, true, true]);
+
+  // At the end of the Hero the statement fills the screen, at its pinned place.
+  await scrollToUnit(page, 100);
+  await expect.poll(() => statementRows(page)).toEqual([true, true, true, true]);
+  await expect(heading).toBeInViewport();
+  const top = (await heading.boundingBox())!.y;
+
+  // Scrolling on plays the statement's sequence: everything holds still.
+  await page.mouse.wheel(0, 200);
+  await page.waitForTimeout(800);
+  expect(Math.abs((await heading.boundingBox())!.y - top)).toBeLessThanOrEqual(1);
+  // And no edge of the statement's own shows over it.
+  await expect(page.locator(`#${anchors.statement} > svg`)).toBeHidden();
 });
 
 test("the accessible tree is the same as in Static, with the counter hidden", async ({ browser }) => {
@@ -203,6 +199,33 @@ test("the accessible tree is the same as in Static, with the counter hidden", as
   for (const label of transformation.meterLabels) expect(expected.split(label).length - 1).toBe(1);
   // Nothing decorative takes focus.
   expect(await page.locator('[aria-hidden="true"] :is(a, button, [tabindex])').count()).toBe(0);
+});
+
+test("keyboard focus on the Hero's link, deep in the Beats, shows it unobscured", async ({ page }) => {
+  await page.goto("/");
+  await expect3d(page);
+  const cta = hero(page).getByRole("link", { name: opening.cta.label, exact: true });
+
+  // Late in Saída the intro, the link included, has long gone, and the frame is nearly wiped away.
+  await scrollToUnit(page, 99);
+  await page.waitForTimeout(1_500);
+  await page
+    .locator(`#${anchors.statement}`)
+    .getByRole("link")
+    .evaluate((el: HTMLElement) => el.focus({ preventScroll: true }));
+  await page.keyboard.press("Shift+Tab");
+
+  await expect(cta).toBeFocused();
+  await expect(cta).toBeInViewport();
+  await expect
+    .poll(() =>
+      cta.evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        const shown = Number(getComputedStyle(el.closest("[data-vitrine]")!).opacity) === 1;
+        return shown && el.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
+      }),
+    )
+    .toBe(true);
 });
 
 test("scrolling through the Hero causes no React re-renders", async ({ page }) => {

@@ -127,7 +127,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
         // Decorative: hidden from assistive technology and never focusable or hit by the pointer.
         <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${showing3d ? "" : "opacity-0"}`}>
           <SceneBoundary onError={events.onFailure}>
-            <HeroScene rig={rig} tier={tier} frame={poster} {...events} />
+            <HeroScene rig={rig} tier={tier} poster={poster} {...events} />
           </SceneBoundary>
         </div>
       )}

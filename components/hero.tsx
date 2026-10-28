@@ -6,7 +6,7 @@ import { HeroStage } from "./hero-stage";
 
 const { opening, opened, transformation, rotatingCan } = copy.hero;
 
-// Small, irregular tilts so the badges never read as a regular grid.
+// Small, irregular resting tilts so the badges never read as a regular grid.
 const badgeTilt = ["-rotate-2", "rotate-[1.5deg]", "-rotate-1"];
 
 /**
@@ -32,19 +32,30 @@ const bottom = "vitrine:bottom-[12svh] max-sm:vitrine:bottom-[9svh]";
 /** Copy waiting for its Beat is not painted until the timeline brings it in. */
 const waiting = "vitrine:opacity-0";
 
+/** The intro's two corner lines, in front of the object at the bottom of the frame. */
+const cornerLine = `vitrine:absolute vitrine:z-20 vitrine:m-0 ${bottom} vitrine:max-w-64 vitrine:animate-settle max-sm:vitrine:max-w-[42vw] max-sm:vitrine:text-[13px] max-sm:vitrine:leading-snug`;
+
+/** The split headline's size in the Vitrine: set in `vw` on phones, so a line never overflows. */
+const splitSize = "vitrine:text-[clamp(3rem,min(8vw,15svh),7.5rem)] max-sm:vitrine:text-[15vw]";
+
 /**
  * The Hero. In Static, the poster plus every Beat's Copy in normal page flow.
  * Outside Static, the Vitrine: one pinned frame where the same Copy moves around
  * the object, behind it (z-0) or in front of it (z-20), as scroll scrubs the Beats
  * (DESIGN.md § Hero choreography). Either way this markup is the accessible source
- * of the Hero Copy; only the painted meter and the Saída panel are decoration.
+ * of the Hero Copy; only the painted meter is decoration.
  */
 export function Hero() {
   return (
     <section
       aria-labelledby="hero-heading"
-      className="mx-auto w-full max-w-6xl px-4 pt-6 pb-20 sm:px-8 vitrine:max-w-none vitrine:p-0">
-      <div data-hero-pin className="vitrine:relative vitrine:isolate vitrine:h-svh vitrine:overflow-hidden">
+      // The pin's spacer overlaps the statement's first screen; only the frame itself takes the pointer.
+      className="mx-auto w-full max-w-6xl px-4 pt-6 pb-20 sm:px-8 vitrine:pointer-events-none vitrine:max-w-none vitrine:p-0">
+      {/* Opaque and above the brand statement, which slides up beneath it during the last
+          screen of the pin, for Saída to wipe the frame away onto it */}
+      <div
+        data-hero-pin
+        className="vitrine:pointer-events-auto vitrine:relative vitrine:isolate vitrine:z-10 vitrine:h-svh vitrine:overflow-hidden vitrine:bg-polpa vitrine:bg-grain">
         {/* Girar: the intro composition, settled in from the first paint */}
         <div className="grid gap-8 md:grid-cols-[1.4fr_1fr] md:items-end vitrine:contents">
           <div
@@ -71,12 +82,12 @@ export function Hero() {
           <div className="space-y-3 text-lg md:text-right vitrine:contents">
             <p
               data-vitrine="intro"
-              className={`vitrine:absolute vitrine:z-20 vitrine:m-0 ${bottom} ${left} vitrine:max-w-64 vitrine:animate-settle vitrine:[animation-delay:0.8s] max-sm:vitrine:max-w-[42vw] max-sm:vitrine:text-[13px] max-sm:vitrine:leading-snug`}>
+              className={`${cornerLine} ${left} vitrine:[animation-delay:0.8s]`}>
               {opening.corner}
             </p>
             <p
               data-vitrine="intro"
-              className={`vitrine:absolute vitrine:z-20 vitrine:m-0 ${bottom} ${right} vitrine:max-w-64 vitrine:text-right vitrine:animate-settle vitrine:[animation-delay:0.95s] max-sm:vitrine:max-w-[42vw] max-sm:vitrine:text-[13px] max-sm:vitrine:leading-snug`}>
+              className={`${cornerLine} ${right} vitrine:text-right vitrine:[animation-delay:0.95s]`}>
               {opening.oppositeCorner}
             </p>
           </div>
@@ -86,13 +97,13 @@ export function Hero() {
         <div className="mt-16 grid items-center gap-8 md:grid-cols-[1fr_auto_1fr] vitrine:contents">
           <p
             data-vitrine="opened"
-            className={`${splitLine} md:text-right vitrine:absolute vitrine:z-0 ${top} ${left} vitrine:max-w-[5em] vitrine:-rotate-1 vitrine:text-left vitrine:text-[clamp(3rem,min(8vw,15svh),7.5rem)] max-sm:vitrine:text-[15vw] ${waiting}`}>
+            className={`${splitLine} md:text-right vitrine:absolute vitrine:z-0 ${top} ${left} vitrine:max-w-[5em] vitrine:-rotate-1 vitrine:text-left ${splitSize} ${waiting}`}>
             {opened.headline[0]}
           </p>
           <HeroPoster />
           <p
             data-vitrine="opened"
-            className={`${splitLine} vitrine:absolute vitrine:z-20 ${bottom} ${right} vitrine:rotate-1 vitrine:text-right vitrine:text-[clamp(3rem,min(8vw,15svh),7.5rem)] max-sm:vitrine:text-[15vw] ${waiting}`}>
+            className={`${splitLine} vitrine:absolute vitrine:z-20 ${bottom} ${right} vitrine:rotate-1 vitrine:text-right ${splitSize} ${waiting}`}>
             {opened.headline[1]}
           </p>
         </div>
@@ -132,12 +143,7 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Saída: the dark Fibra panel rises over the can; the brand statement runs on from it */}
-        <div
-          aria-hidden="true"
-          data-vitrine="panel"
-          className="hidden bg-fibra bg-grain-dark bg-bottom clip-hand-cut [transform:translateY(100%)] vitrine:absolute vitrine:inset-x-0 vitrine:-top-6 vitrine:bottom-0 vitrine:z-30 vitrine:block"
-        />
+        {/* Saída: the statement's hand-cut edge rises and wipes this frame away (lib/hero-copy.ts) */}
       </div>
     </section>
   );

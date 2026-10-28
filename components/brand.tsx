@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { handCutPath } from "@/lib/hand-cut";
 
 // Stand-ins for the hand-lettered wordmark and the machete-cut symbol until the
 // final artwork arrives. Both are decorative apart from the wordmark's text.
@@ -64,10 +65,7 @@ export function BrushUnderline({ className = "" }: { className?: string }) {
   );
 }
 
-/**
- * The dark Fibra panel's uneven, hand-cut top edge. The `clip-hand-cut` utility in
- * globals.css cuts the same line, for a panel whose grain must run up to it.
- */
+/** The dark Fibra statement's uneven, hand-cut top edge (lib/hand-cut.ts). */
 export function HandCutEdge({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -76,7 +74,7 @@ export function HandCutEdge({ className = "" }: { className?: string }) {
       className={`fill-fibra ${className}`}
       aria-hidden="true"
       focusable="false">
-      <path d="M0 24 L0 14 L140 9 L310 16 L470 6 L640 13 L820 4 L990 12 L1200 7 L1200 24 Z" />
+      <path d={handCutPath} />
     </svg>
   );
 }

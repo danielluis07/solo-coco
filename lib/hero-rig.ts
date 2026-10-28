@@ -33,7 +33,7 @@ export function createHeroRig() {
     badges: [{ drift: 0 }, { drift: 0 }, { drift: 0 }],
     /** Virar lata: the painted meter, shown as a piece of Copy, and its count 0–100. */
     meter: { at: 0, count: 0 },
-    /** Saída: the Fibra panel, 0 below the frame to 1 covering it. */
+    /** Saída: the brand statement's Fibra panel rising over the frame, 0 below it to 1 covering it. */
     panel: { rise: 0 },
     /**
      * Offsets the entrance plays out to zero. Kept apart from the scrubbed pose so

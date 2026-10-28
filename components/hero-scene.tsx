@@ -21,8 +21,8 @@ const fpsWarmUpMs = 1_000;
 /** Pixel-ratio cap per tier. */
 const pixelRatio = { full: 1.5, lite: 1 };
 
-/** Particles in the Virar lata burst, per tier. */
-const particleCount = { full: 160, lite: 90 };
+/** Particles in the Virar lata burst: Lite's count, which Full shares until its dissolve arrives. */
+const burstParticles = 90;
 
 /**
  * How far the cap travels at full lift, in the coconut's own units: up, back, and tipped back (radians).
@@ -52,10 +52,10 @@ type Props = HeroSceneEvents & {
   rig: HeroRig;
   tier: Exclude<Tier, "static">;
   /** The square the poster fills: the scene frames the object exactly as the poster does. */
-  frame: RefObject<HTMLElement | null>;
+  poster: RefObject<HTMLElement | null>;
 };
 
-export default function HeroScene({ rig, tier, frame, ...events }: Props) {
+export default function HeroScene({ rig, tier, poster, ...events }: Props) {
   return (
     <Canvas
       frameloop="never"
@@ -70,23 +70,20 @@ export default function HeroScene({ rig, tier, frame, ...events }: Props) {
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <hemisphereLight args={[stage.hemisphere.sky, stage.hemisphere.ground, stage.hemisphere.intensity]} />
       <directionalLight position={stage.sun.position as [number, number, number]} intensity={stage.sun.intensity} />
-      <Driver rig={rig} frame={frame} particles={particleCount[tier]} {...events} />
+      <Driver rig={rig} poster={poster} {...events} />
     </Canvas>
   );
 }
 
-type DriverProps = HeroSceneEvents & Pick<Props, "rig" | "frame"> & { particles: number };
+type DriverProps = HeroSceneEvents & Pick<Props, "rig" | "poster">;
 
 /** Loads the assets, then renders whenever the rig moves while the Hero is in view. */
-function Driver({ rig, frame, particles, ...props }: DriverProps) {
+function Driver({ rig, poster, ...props }: DriverProps) {
   const store = useThree((state) => state.get);
   // The latest callbacks, without restarting the loop when the parent re-renders.
   const events = useRef(props);
-  // Read once the assets are in; a later tier change keeps the burst already built.
-  const burstSize = useRef(particles);
   useEffect(() => {
     events.current = props;
-    burstSize.current = particles;
   });
 
   useEffect(() => {
@@ -114,9 +111,9 @@ function Driver({ rig, frame, particles, ...props }: DriverProps) {
     // The poster's square, which the camera keeps framed whatever the canvas size.
     let square = 0;
     const measure = new ResizeObserver(() => {
-      square = frame.current?.offsetWidth ?? 0;
+      square = poster.current?.offsetWidth ?? 0;
     });
-    if (frame.current) measure.observe(frame.current);
+    if (poster.current) measure.observe(poster.current);
 
     const sampler = createFpsSampler({ warmUpMs: fpsWarmUpMs, onWindow: (fps) => events.current.onFps(fps) });
     let rendering = true;
@@ -170,7 +167,7 @@ function Driver({ rig, frame, particles, ...props }: DriverProps) {
         if (stopped) return loaded.dispose();
         assets = loaded;
         capRest = loaded.coconut.top.position.clone();
-        burst = createBurst(burstSize.current);
+        burst = createBurst(burstParticles);
         scene.add(loaded.coconut.root, loaded.can, burst.mesh);
         pose(loaded, capRest, rig, 0);
         burst.pose(rig.burst);
@@ -200,7 +197,7 @@ function Driver({ rig, frame, particles, ...props }: DriverProps) {
         burst.dispose();
       }
     };
-  }, [store, rig, frame]);
+  }, [store, rig, poster]);
 
   return null;
 }
