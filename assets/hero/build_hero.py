@@ -29,13 +29,19 @@ OUT = Path(sys.argv[sys.argv.index("--") + 1])
 LABEL_PNG = Path(sys.argv[sys.argv.index("--") + 2])
 
 random.seed(25)
+RNG = np.random.default_rng(25)
 
-# Coconut: 2.2 tall, 0.95 round, spanning z -1.1..1.1 like the reference rig.
-HALF_HEIGHT = 1.1
-RADIUS = 0.95
-# The machete cut across the top, on the coconut's local height axis.
-CUT_Z = 0.5
-CUT_JITTER = 0.035
+# Coconut: a mature brown coconut lying on its side, its long axis on X.
+# Half-length (x), half-depth (y) and half-height (z).
+COCONUT = (1.6, 1.25, 1.15)
+HUSK_THICKNESS = 0.16
+FLESH_THICKNESS = 0.07
+# The crack that splits it, across the middle: a zigzag of uneven teeth.
+CUT_Z = 0.1
+TEETH = 16
+TOOTH_HEIGHT = 0.11
+# The coconut water stands just under the lowest point of the crack.
+LIQUID_Z = CUT_Z - TOOTH_HEIGHT * 1.3 - 0.05
 
 # Can: a 350 ml can is 66 mm across and 122 mm tall, with about 100 mm printed.
 CAN_RADIUS = 0.66
@@ -67,7 +73,7 @@ def node_tree(owner):
     return owner.node_tree
 
 
-def material(name, color, roughness, metallic=0.0, image=None):
+def material(name, color, roughness, metallic=0.0, image=None, normal=None):
     mat = bpy.data.materials.new(name)
     tree = node_tree(mat)
     bsdf = next(n for n in tree.nodes if n.type == "BSDF_PRINCIPLED")
@@ -78,6 +84,12 @@ def material(name, color, roughness, metallic=0.0, image=None):
         tex = tree.nodes.new("ShaderNodeTexImage")
         tex.image = image
         tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    if normal is not None:
+        tex = tree.nodes.new("ShaderNodeTexImage")
+        tex.image = normal
+        normal_map = tree.nodes.new("ShaderNodeNormalMap")
+        tree.links.new(tex.outputs["Color"], normal_map.inputs["Color"])
+        tree.links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
 
@@ -103,73 +115,141 @@ def mark_sharp(bm, degrees):
 
 
 def coconut_point(direction):
-    """Pushes a unit-sphere direction out to the young green coconut's surface."""
+    """Pushes a unit-sphere direction, poles on X, out to the mature coconut's surface."""
     d = direction.normalized()
-    z = d.z
-    ring = math.sqrt(max(0.0, 1 - z * z))
-    phi = math.atan2(d.y, d.x)
-    # Broad, slightly flattened at the stem end; the far end narrows to a point.
-    taper = 1 - 0.06 * max(z, 0) ** 2 - 0.32 * max(-z, 0) ** 1.5
-    # Three ridges give the triangular section of a coco verde, strongest towards the point.
-    ridges = 1 + (0.03 + 0.04 * max(-z, 0)) * math.cos(3 * phi + 0.4) * ring
-    bumps = 1 + 0.012 * noise.noise(d * 3.1) + 0.004 * noise.noise(d * 11.0)
-    r = RADIUS * taper * ridges * bumps
-    height = HALF_HEIGHT * (0.9 if z > 0 else 1 + 0.08 * max(-z, 0) ** 8)
-    return Vector((d.x * r, d.y * r, z * height * (1 + 0.004 * noise.noise(d * 5.0))))
+    # An egg on its side: fuller at the stem end (+X), a little narrower at the far end.
+    girth = 1 + 0.04 * d.x - 0.03 * max(-d.x, 0) ** 2
+    lumps = 1 + 0.035 * noise.noise(d * 1.7) + 0.01 * noise.noise(d * 4.3)
+    # Bundles of fibre run end to end as ridges, so this noise is stretched along X.
+    ridges = (
+        1
+        + 0.024 * noise.noise(Vector((d.x * 1.0, d.y * 4.5, d.z * 4.5)))
+        + 0.007 * noise.noise(Vector((d.x * 1.5, d.y * 11.0, d.z * 11.0)))
+    )
+    s = lumps * ridges
+    return Vector((COCONUT[0] * d.x * s, COCONUT[1] * d.y * girth * s, COCONUT[2] * d.z * girth * s))
 
 
-def coconut_radius_at(z, phi):
-    """Distance from the axis to the surface at height z, by bisection."""
-    lo, hi = -math.pi / 2, math.pi / 2
-    for _ in range(40):
-        mid = (lo + hi) / 2
-        d = Vector((math.cos(mid) * math.cos(phi), math.cos(mid) * math.sin(phi), math.sin(mid)))
-        if coconut_point(d).z < z:
-            lo = mid
-        else:
-            hi = mid
-    p = coconut_point(Vector((math.cos(lo) * math.cos(phi), math.cos(lo) * math.sin(phi), math.sin(lo))))
-    return Vector((p.x, p.y)).length
+def value_noise(u, v, cells_u, cells_v):
+    """Smooth value noise at texture coordinates (u, v), periodic around u so the seam meets."""
+    grid = RNG.random((cells_v + 1, cells_u))
+    gu, gv = u * cells_u, np.clip(v, 0, 1) * cells_v
+    i0 = np.floor(gu).astype(int)
+    j0 = np.minimum(np.floor(gv).astype(int), cells_v - 1)
+    fu, fv = gu - i0, gv - j0
+    fu, fv = fu * fu * (3 - 2 * fu), fv * fv * (3 - 2 * fv)
+    i0 %= cells_u
+    i1 = (i0 + 1) % cells_u
+    top = grid[j0, i0] * (1 - fu) + grid[j0, i1] * fu
+    bottom = grid[j0 + 1, i0] * (1 - fu) + grid[j0 + 1, i1] * fu
+    return top * (1 - fv) + bottom * fv
 
 
-def husk_texture(size=1024):
-    """Equirectangular husk colour: Casca greens, fine fibres, the calyx crown and the tip."""
-    u = (np.arange(size) + 0.5) / size
-    v = (np.arange(size) + 0.5) / size
-    uu, vv = np.meshgrid(u, v)
-    tau = 2 * np.pi
-    # Every term has a whole number of periods around u, so the texture meets at its seam.
-    low = np.zeros_like(uu)
-    for k, fv, amp in [(2, 1.3, 0.5), (3, 2.1, 0.35), (5, 3.7, 0.25), (9, 6.3, 0.15)]:
-        low += amp * np.sin(tau * k * uu + fv * tau * vv + random.uniform(0, tau))
-    fibres = np.sin(tau * 140 * uu + 3 * np.sin(tau * 4 * vv + tau * 3 * uu)) * 0.5 + 0.5
-    base = np.array(srgb_to_linear("#73A03A"))
-    light = np.array(srgb_to_linear("#9DBF55"))
-    deep = np.array(srgb_to_linear("#557F28"))
-    t = np.clip(0.5 + 0.35 * low, 0, 1)[..., None]
-    color = base * (1 - t) + light * t
-    color = color * (1 - 0.18 * fibres[..., None] ** 6) + deep * 0.18 * fibres[..., None] ** 6
-    # Yellowing towards the stem end, where the coconut hung in the sun.
-    top = np.clip((vv - 0.7) / 0.25, 0, 1)[..., None]
-    color = color * (1 - 0.35 * top) + np.array(srgb_to_linear("#B8BD58")) * 0.35 * top
-    # Calyx: a three-pointed beige-brown crown at the stem.
-    crown = 0.935 - 0.03 * np.cos(3 * tau * uu + 0.4)
-    calyx = np.clip((vv - crown) / 0.012, 0, 1)[..., None]
-    color = color * (1 - calyx) + np.array(srgb_to_linear("#8E7448")) * calyx
-    stem = np.clip((vv - 0.985) / 0.01, 0, 1)[..., None]
-    color = color * (1 - stem) + np.array(srgb_to_linear("#5C4428")) * stem
-    # The dry tip at the far end.
-    tip = np.clip((0.025 - vv) / 0.015, 0, 1)[..., None]
-    color = color * (1 - tip) + np.array(srgb_to_linear("#6B5634")) * tip
+def smoothstep(e0, e1, x):
+    t = np.clip((x - e0) / (e1 - e0), 0, 1)
+    return t * t * (3 - 2 * t)
 
-    srgb = np.where(color <= 0.0031308, color * 12.92, 1.055 * np.power(color, 1 / 2.4) - 0.055)
-    rgba = np.concatenate([np.clip(srgb, 0, 1), np.ones((size, size, 1))], axis=2)
-    image = bpy.data.images.new("Husk", size, size, alpha=False)
+
+def save_image(name, rgb, srgb):
+    """A generated image, written beside the GLB so the exporter can embed it."""
+    height, width, _ = rgb.shape
+    if srgb:
+        rgb = np.where(rgb <= 0.0031308, rgb * 12.92, 1.055 * np.power(np.maximum(rgb, 0), 1 / 2.4) - 0.055)
+    rgba = np.concatenate([np.clip(rgb, 0, 1), np.ones((height, width, 1))], axis=2)
+    image = bpy.data.images.new(name, width, height, alpha=False)
+    # Before the pixels: changing a generated image's colour space regenerates it.
+    if not srgb:
+        image.colorspace_settings.name = "Non-Color"
     image.pixels.foreach_set(rgba.astype(np.float32).ravel())
-    image.filepath_raw = str(OUT / "husk.png")
+    image.filepath_raw = str(OUT / f"{name.lower()}.png")
     image.file_format = "PNG"
     image.save()
     return image
+
+
+def strands(shape, count, length, spread, wobble):
+    """Rasterises `count` fibre strands into a (v, u) layer, mostly running along v.
+
+    length is a (min, max) in pixels, spread the angle's standard deviation off the v axis
+    in radians, and wobble how far a strand bows sideways, in pixels. Strands wrap around u.
+    """
+    height, width = shape
+    steps = int(length[1])
+    t = np.linspace(0, 1, steps)[None, :]
+    lengths = RNG.uniform(*length, count)[:, None]
+    angle = RNG.normal(0, spread, count)[:, None]
+    bend = wobble * np.sin(np.pi * t * RNG.uniform(1, 3, (count, 1)) + RNG.uniform(0, 2 * np.pi, (count, 1)))
+    along = t * lengths
+    u = RNG.uniform(0, width, (count, 1)) + along * np.sin(angle) + bend * np.cos(angle)
+    v = RNG.uniform(0, height, (count, 1)) + along * np.cos(angle)
+    # About one sample per pixel whatever the length, thinning out at both tips.
+    weight = np.sqrt(np.sin(np.pi * t)) * lengths / steps
+    rows = np.clip(np.round(v).astype(int), 0, height - 1)
+    cols = np.round(u).astype(int) % width
+    layer = np.bincount((rows * width + cols).ravel(), np.broadcast_to(weight, rows.shape).ravel(), minlength=height * width)
+    return layer.reshape(shape)
+
+
+def widen(layer, passes):
+    """Blurs a layer across u, so its strands are a few pixels wide."""
+    for _ in range(passes):
+        layer = 0.25 * np.roll(layer, 1, axis=1) + 0.5 * layer + 0.25 * np.roll(layer, -1, axis=1)
+    return layer
+
+
+def coverage(layer, density):
+    return 1 - np.exp(-density * layer)
+
+
+def husk_textures(width=2048, height=1024):
+    """Colour and normal maps of the brown husk: coarse fibre along v, frizz across it, creases."""
+    shape = (height, width)
+    u = (np.arange(width) + 0.5) / width
+    v = (np.arange(height) + 0.5) / height
+    uu, vv = np.meshgrid(u, v)
+
+    fibres = coverage(widen(strands(shape, 80_000, (8, 40), 0.18, 1.0), 1), 0.9)
+    cords = coverage(widen(strands(shape, 6_000, (40, 140), 0.1, 3.0), 2), 0.9)
+    frizz = coverage(widen(strands(shape, 7_000, (6, 28), 0.7, 1.0), 1), 0.8)
+    creases = coverage(widen(strands(shape, 1_200, (150, 600), 0.04, 6.0), 4), 2.5)
+    # Wide bundles of fibre that catch the light, with darker, sparser husk between them.
+    wander = 0.01 * (value_noise(uu, vv, 6, 4) - 0.5)
+    bundles = smoothstep(0.4, 0.75, value_noise(uu + wander, vv, 130, 28))
+    # Matted, mottled husk, broken up at every scale.
+    mottle = 0.6 * value_noise(uu, vv, 220, 110) + 0.4 * value_noise(uu, vv, 70, 35)
+    patches = value_noise(uu, vv, 10, 6)
+    worn = smoothstep(0.7, 0.9, value_noise(uu, vv, 40, 5))
+    # The strands converge at the two ends, so soften them there rather than pinch.
+    ends = smoothstep(0.0, 0.12, vv) * smoothstep(1.0, 0.88, vv)
+
+    def mix(a, b, t):
+        return a + (b - a) * t[..., None]
+
+    def rgb(hex_color):
+        return np.array(srgb_to_linear(hex_color))
+
+    # Red-brown husk, dark where the fibres part, tan where they lie on top.
+    color = mix(rgb("#3F1A0B"), rgb("#7A361B"), patches)
+    color = mix(color, rgb("#1F0B04"), 0.85 * (1 - fibres) * (1 - cords) * (1 - 0.5 * bundles) * ends)
+    color = mix(color, mix(rgb("#8A4322"), rgb("#CB8650"), bundles), 0.85 * fibres * ends)
+    color = mix(color, rgb("#8A4524"), 0.6 * cords)
+    color = mix(color, rgb("#C88A58"), 0.45 * frizz * ends)
+    color = mix(color, rgb("#1C0B05"), 0.85 * creases)
+    color = color * (0.7 + 0.6 * mottle[..., None])
+    # Rubbed patches, where the fibre is worn pale and flat.
+    color = mix(color, rgb("#8C6450"), 0.3 * worn * (1 - creases))
+
+    relief = (0.3 * fibres + 0.3 * cords + 0.15 * frizz + 0.4 * bundles + 0.3 * mottle - 0.9 * creases) * (0.3 + 0.7 * ends) * (1 - 0.5 * worn)
+
+    # Tangent-space normals from the relief: x along u, y along v, as glTF and Blender both read them.
+    # At half the colour's size: normal maps ship as UASTC, the heavier KTX2 format.
+    relief = relief.reshape(height // 2, 2, width // 2, 2).mean(axis=(1, 3))
+    du = (np.roll(relief, -1, axis=1) - np.roll(relief, 1, axis=1)) / 2
+    dv = np.gradient(relief, axis=0)
+    strength = 2.5
+    normal = np.stack([-strength * du, -strength * dv, np.ones_like(relief)], axis=-1)
+    normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
+    return save_image("Husk", color, srgb=True), save_image("Husk_Normal", normal * 0.5 + 0.5, srgb=False)
 
 
 def uv_sphere(u_segments, v_segments):
@@ -181,7 +261,9 @@ def uv_sphere(u_segments, v_segments):
 
 
 def whole_coconut(mats):
-    bm = uv_sphere(96, 56)
+    bm = uv_sphere(112, 60)
+    # Poles on X, so the fibres in the texture run along the coconut's length.
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.radians(90), 3, "Y"))
     for vert in bm.verts:
         vert.co = coconut_point(vert.co)
     for face in bm.faces:
@@ -190,10 +272,10 @@ def whole_coconut(mats):
     return link("Coconut", bm, [mats["Husk"], mats["Husk_Inner"], mats["Flesh"]])
 
 
-def ellipsoid(name, radii, center, inside_out=False, segments=(40, 20)):
+def ellipsoid(radii, inside_out=False, segments=(40, 20)):
     bm = uv_sphere(*segments)
     for vert in bm.verts:
-        vert.co = Vector((vert.co.x * radii[0], vert.co.y * radii[1], vert.co.z * radii[2])) + Vector(center)
+        vert.co = Vector((vert.co.x * radii[0], vert.co.y * radii[1], vert.co.z * radii[2]))
     if inside_out:
         bmesh.ops.reverse_faces(bm, faces=bm.faces)
     for face in bm.faces:
@@ -201,21 +283,19 @@ def ellipsoid(name, radii, center, inside_out=False, segments=(40, 20)):
     return bm
 
 
-CAVITY = {"radii": (0.58, 0.58, 0.68), "center": (0, 0, 0.12)}
-FLESH_THICKNESS = 0.06
+# The cavity inside the husk, and the inner wall of the white flesh lining it.
+CAVITY = tuple(r - HUSK_THICKNESS for r in COCONUT)
+FLESH_WALL = tuple(r - FLESH_THICKNESS for r in CAVITY)
 
 
 def cavity(mats):
-    bm = ellipsoid("Cavity", CAVITY["radii"], CAVITY["center"])
-    return link("Cavity", bm, [mats["Flesh"]])
+    return link("Cavity", ellipsoid(CAVITY), [mats["Flesh"]])
 
 
 def flesh_shell(mats):
     """The white flesh lining the cavity: a closed shell, its inner wall facing inwards."""
-    outer = CAVITY["radii"]
-    inner = tuple(r - FLESH_THICKNESS for r in outer)
-    bm = ellipsoid("Flesh", outer, CAVITY["center"])
-    shell = ellipsoid("FleshInner", inner, CAVITY["center"], inside_out=True)
+    bm = ellipsoid(CAVITY)
+    shell = ellipsoid(FLESH_WALL, inside_out=True)
     mesh = bpy.data.meshes.new("tmp")
     shell.to_mesh(mesh)
     shell.free()
@@ -224,26 +304,69 @@ def flesh_shell(mats):
     return link("FleshShell", bm, [mats["Flesh"]])
 
 
-def cutter(mats):
-    """A block whose underside is the jagged machete cut; everything above it is the cap."""
+def crack_profile():
+    """(angle, height) at each valley and peak of the crack, the teeth a little uneven."""
+    points = []
+    for k in range(TEETH):
+        valley = (k + random.uniform(-0.12, 0.12)) / TEETH
+        peak = (k + 0.5 + random.uniform(-0.15, 0.15)) / TEETH
+        points.append((2 * math.pi * valley, CUT_Z - TOOTH_HEIGHT * random.uniform(0.7, 1.3)))
+        points.append((2 * math.pi * peak, CUT_Z + TOOTH_HEIGHT * random.uniform(0.7, 1.3)))
+    return points
+
+
+def disc(z_of, rings, angles, radii):
+    """A fan of rings around the Z axis, facing up. z_of(x, y, s, angle) sets each vertex's height."""
     bm = bmesh.new()
-    bmesh.ops.create_grid(bm, x_segments=28, y_segments=28, size=1)
-    extent = max(abs(v.co.x) for v in bm.verts)
-    for vert in bm.verts:
-        vert.co.x *= 1.4 / extent
-        vert.co.y *= 1.4 / extent
-    for vert in bm.verts:
-        edge = abs(vert.co.x) > 1.39 or abs(vert.co.y) > 1.39
-        # Short chops along one stroke direction, like a facão taken at a slight angle.
-        chop = 0.5 * math.sin(vert.co.x * 9 + vert.co.y * 2)
-        vert.co.z = CUT_Z + (0 if edge else CUT_JITTER * (chop + random.uniform(-0.5, 0.5)))
+    center = bm.verts.new((0, 0, z_of(0, 0, 0, None)))
+    grid = []
+    for s in rings:
+        ring = []
+        for t in angles:
+            x, y = s * radii[0] * math.cos(t), s * radii[1] * math.sin(t)
+            ring.append(bm.verts.new((x, y, z_of(x, y, s, t))))
+        grid.append(ring)
+    n = len(angles)
+    for j in range(n):
+        k = (j + 1) % n
+        bm.faces.new((center, grid[0][j], grid[0][k]))
+        for inner, outer in zip(grid, grid[1:]):
+            bm.faces.new((inner[j], outer[j], outer[k], inner[k]))
+    return bm
+
+
+def cutter(mats):
+    """A block whose underside is the zigzag crack; everything above it is the cap."""
+    heights = dict(crack_profile())
+    # Each spoke keeps its height out to the rim, so the crack zigzags across the husk.
+    bm = disc(
+        lambda x, y, s, angle: CUT_Z if angle is None else heights[angle],
+        rings=(0.3, 0.6, 0.85, 1.1, 1.4),
+        angles=list(heights),
+        radii=COCONUT,
+    )
     bottom = list(bm.faces)
     extruded = bmesh.ops.extrude_face_region(bm, geom=bottom, use_keep_orig=True)
-    top_verts = [g for g in extruded["geom"] if isinstance(g, bmesh.types.BMVert)]
-    for vert in top_verts:
-        vert.co.z = CUT_Z + 2.0
+    for vert in (g for g in extruded["geom"] if isinstance(g, bmesh.types.BMVert)):
+        vert.co.z = CUT_Z + 3.0
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return link("Cutter", bm, [mats["Husk_Inner"]])
+
+
+def liquid(mats):
+    """The coconut water in the bottom half: a slow swell, its rim tucked into the flesh."""
+    across = math.sqrt(1 - (LIQUID_Z / FLESH_WALL[2]) ** 2)
+    radii = (FLESH_WALL[0] * across + 0.02, FLESH_WALL[1] * across + 0.02)
+    bm = disc(
+        lambda x, y, s, angle: LIQUID_Z + 0.025 * noise.noise(Vector((x * 1.6, y * 1.6, 0.5))) * (1 - s**4),
+        # Rings bunched towards the centre, so the fan there doesn't pinch the reflections.
+        rings=[(i / 14) ** 1.3 for i in range(1, 15)],
+        angles=[2 * math.pi * j / 72 for j in range(72)],
+        radii=radii,
+    )
+    for face in bm.faces:
+        face.smooth = True
+    return link("Liquid", bm, [mats["Liquid"]])
 
 
 def boolean(base, steps):
@@ -272,23 +395,27 @@ def into(bm, mesh, mats, order, force=None):
 
 
 def halves(whole, mats):
-    """Cap and body cut from the whole coconut, hollowed and lined with white flesh."""
-    hollow, shell, blade = cavity(mats), flesh_shell(mats), cutter(mats)
-    order = ["Husk", "Husk_Inner", "Flesh"]
+    """Cap and body cut from the whole coconut, lined with white flesh; the body holds the coconut water."""
+    hollow, shell, blade, water = cavity(mats), flesh_shell(mats), cutter(mats), liquid(mats)
+    order = ["Husk", "Husk_Inner", "Flesh", "Liquid"]
     # Both halves pivot on the crack line at the back, so the cap can hinge open or lift off.
-    pivot = Vector((0, coconut_radius_at(CUT_Z, math.pi / 2), CUT_Z))
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    _, back, *_ = whole.ray_cast(Vector((0, 5, CUT_Z)), Vector((0, -1, 0)), depsgraph=depsgraph)
+    pivot = Vector((0, back.y, CUT_Z))
     pieces = {}
     for name, op in [("Coconut_Top", "INTERSECT"), ("Coconut_Bottom", "DIFFERENCE")]:
         bm = bmesh.new()
         into(bm, boolean(whole, [("DIFFERENCE", hollow), (op, blade)]), mats, order)
         # The flesh's own cut face is flesh too, not husk.
         into(bm, boolean(shell, [(op, blade)]), mats, order, force="Flesh")
+        if name == "Coconut_Bottom":
+            into(bm, water.data, mats, order)
         bmesh.ops.translate(bm, verts=bm.verts, vec=-pivot)
         for face in bm.faces:
             face.smooth = face.material_index != 1
         mark_sharp(bm, 50)
         pieces[name] = link(name, bm, [mats[n] for n in order], location=pivot)
-    for helper in (hollow, shell, blade):
+    for helper in (hollow, shell, blade, water):
         bpy.data.objects.remove(helper, do_unlink=True)
     return pieces
 
@@ -491,11 +618,14 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     reset_scene()
     label = bpy.data.images.load(str(LABEL_PNG))
+    husk_color, husk_normal = husk_textures()
     mats = {
-        "Husk": material("Husk", "#73A03A", 0.6, image=husk_texture()),
-        # Cut husk of a young coconut: cream fibre.
-        "Husk_Inner": material("Husk_Inner", "#ECE4C8", 0.85),
+        "Husk": material("Husk", "#7A361B", 0.85, image=husk_color, normal=husk_normal),
+        # Cut husk and shell of a mature coconut: tan-brown fibre.
+        "Husk_Inner": material("Husk_Inner", "#6B3E24", 0.95),
         "Flesh": material("Flesh", "#FAFAF5", 0.45),
+        # Milky and glossy. Its reflections, added in the live scene (lib/hero-assets.ts), bring it up to white.
+        "Liquid": material("Liquid", "#9E9A93", 0.08),
         # The label image is applied at runtime per Flavour (flipY = false, sRGB); the GLB carries none.
         "Body_Label": material("Body_Label", "#FFFFFF", 0.35, metallic=0.15, image=label),
         "Metal": material("Metal", "#C9CED2", 0.3, metallic=0.6),

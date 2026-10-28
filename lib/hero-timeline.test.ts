@@ -41,11 +41,21 @@ describe("Hero timeline", () => {
     expect(rig.cap.lift).toBe(0);
   });
 
-  test("Facão lifts the cap out of frame by unit 25 and tilts the flesh towards the reader", () => {
+  test("Facão tilts the flesh towards the reader and lifts the cap out of frame by unit 38", () => {
     const { rig, timeline: t } = timeline();
     t.seek(25);
-    expect(rig.cap.lift).toBe(1);
     expect(rig.coconut.rotX).toBeGreaterThan(0.4);
+    t.seek(38);
+    expect(rig.cap.lift).toBe(1);
+  });
+
+  test("Facão opens slowly: the cap has only just cracked off at unit 25 and is still rising at 30", () => {
+    const { rig, timeline: t } = timeline();
+    t.seek(25);
+    expect(rig.cap.lift).toBeGreaterThan(0);
+    expect(rig.cap.lift).toBeLessThan(0.1);
+    t.seek(30);
+    expect(rig.cap.lift).toBeLessThan(0.5);
   });
 
   test("Fechar puts the cap back and levels the coconut by unit 62", () => {

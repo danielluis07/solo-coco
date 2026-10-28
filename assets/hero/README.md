@@ -27,7 +27,7 @@ The outputs go to `public/hero/` and are committed. Intermediates go to `assets/
 
 | File | What it is |
 |------|------------|
-| `build_hero.py` | Blender Python script. It lathes the can and adds its tab, with one rectangular UV strip on `Body_Label`. It shapes the whole coconut and paints its husk texture procedurally. It cuts the halves with a jagged boolean, lines them with a white flesh shell, and pivots both halves on the crack line. It renders the poster. |
+| `build_hero.py` | Blender Python script. It lathes the can and adds its tab, with one rectangular UV strip on `Body_Label`. It shapes the whole coconut (a mature brown coconut, oval and lying on its side) and paints its fibrous husk colour and normal maps procedurally. It splits it through the middle along a zigzag crack, lines both halves with a white flesh shell, fills the bottom half with coconut water, and pivots both halves on the crack line. It renders the poster. |
 | `stage.json` | The camera, lights and first-frame pose, shared by the poster render and the live scene (`components/hero-scene.tsx`), so the poster is the first 3D frame. |
 | `label-so-o-coco.svg` | The Só o Coco can label (DESIGN.md § Can label: Barraca). The back-panel wording is a placeholder until the Copy ticket approves it. |
 | `fonts/` | Bowlby One and Figtree, used to rasterise the label. |
@@ -44,7 +44,7 @@ No Editorial, NC or ND models and no free-tier AI output are used (ADR 0002).
 
 | Output | Contents | Budget |
 |--------|----------|--------|
-| `coconut.glb` | Nodes `Coconut` (whole), `Coconut_Top` (the machete cap) and `Coconut_Bottom`. The halves pivot on the crack line at the back. Materials `Husk`, `Husk_Inner` and `Flesh`. | 10–25k triangles; textures 1–2k |
+| `coconut.glb` | Nodes `Coconut` (whole), `Coconut_Top` (the cap) and `Coconut_Bottom` (holding the coconut water). The halves pivot on the crack line at the back. Materials `Husk` (colour and normal maps), `Husk_Inner`, `Flesh` and `Liquid`, which takes its reflections at runtime. | 10–25k triangles; textures 1–2k |
 | `can.glb` | Nodes `Can` and `Tab`. Materials `Body_Label` (the label UV strip, with no image) and `Metal`. | 2–6k triangles |
 | `label-so-o-coco.ktx2` | The Só o Coco label, swapped onto `Body_Label` at runtime (`flipY = false`, sRGB). | 2048 × 1024 |
 | `poster.png` | The first 3D frame, 1024 × 1024 with a transparent background. | |

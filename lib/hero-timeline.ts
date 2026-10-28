@@ -24,9 +24,11 @@ export function buildHeroTimeline(rig: HeroRig) {
       .timeline({ paused: true, defaults: { ease: "none" } })
       // Girar: about 1¼ slow turns with a slight forward tilt.
       .to(coconut, { rotY: stage.coconut.rotY + Math.PI * 2.5, rotX: 0.12, duration: 20, ease: "sine.inOut" }, 0)
-      // Facão: the one sharp beat. The coconut tilts to show the flesh and the cap lifts out.
-      .to(coconut, { rotX: 0.45, duration: 4, ease: "power2.out" }, 19)
-      .to(cap, { lift: 1, duration: 3, ease: "expo.out" }, 21)
+      // Facão: the coconut tilts to show the flesh and coconut water, and the cap cracks
+      // open. It pries off slowly, then speeds up out of frame, so most of the scroll
+      // goes to the part the visitor can see.
+      .to(coconut, { rotX: 0.45, duration: 6, ease: "power2.inOut" }, 19)
+      .to(cap, { lift: 1, duration: 17, ease: "power2.in" }, 21)
       // Fechar: the cap comes back and the coconut levels out.
       .to(cap, { lift: 0, duration: 6, ease: "power2.inOut" }, 56)
       .to(coconut, { rotX: 0, duration: 6, ease: "power2.inOut" }, 56)

@@ -111,13 +111,17 @@ export function HeroStage({ children }: { children: ReactNode }) {
     <div
       ref={stage}
       data-hero-stage={showing3d ? "3d" : "poster"}
-      className="relative mx-auto aspect-square w-full max-w-sm rounded-board bg-isopor shadow-board md:w-sm">
+      className="relative mx-auto aspect-square w-full max-w-sm md:w-sm xl:w-lg xl:max-w-lg">
       <div ref={poster} className={`absolute inset-0 ${showing3d ? "invisible" : ""}`}>
         {children}
       </div>
       {showScene && (
         // Decorative: hidden from assistive technology and never focusable or hit by the pointer.
-        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${showing3d ? "" : "opacity-0"}`}>
+        // The scene runs the viewport's full height over the stage, so the cap leaves the
+        // screen rather than clipping at the stage's edge.
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-x-0 top-1/2 h-lvh -translate-y-1/2 ${showing3d ? "" : "opacity-0"}`}>
           <SceneBoundary onError={events.onFailure}>
             <HeroScene rig={rig} tier={tier} {...events} />
           </SceneBoundary>

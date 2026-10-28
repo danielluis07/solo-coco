@@ -3,7 +3,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { gsap } from "gsap";
 import { useEffect, useRef } from "react";
-import type { Vector3 } from "three";
+import type { PerspectiveCamera, Vector3 } from "three";
 import stage from "@/assets/hero/stage.json";
 import { createFpsSampler } from "@/lib/fps-sampler";
 import { loadHeroAssets, type HeroAssets } from "@/lib/hero-assets";
@@ -20,8 +20,11 @@ const fpsWarmUpMs = 1_000;
 /** Pixel-ratio cap per tier. */
 const pixelRatio = { full: 1.5, lite: 1 };
 
-/** How far the cap travels at full lift, in the coconut's own units: up, back, and tipped back (radians). */
-const capLift = { up: 2.6, back: 0.3, tilt: 0.5 };
+/**
+ * How far the cap travels at full lift, in the coconut's own units: up, back, and tipped back (radians).
+ * Far enough to clear the top of a tall phone screen.
+ */
+const capLift = { up: 6.5, back: 0.6, tilt: 0.5 };
 
 /** The pre-swap shake at full strength: amplitude in scene units, and a jitter frequency per axis. */
 const shake = { amplitude: 0.05, x: 53, y: 41, roll: 47 };
@@ -121,6 +124,7 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
 
     const render = (now: number) => {
       try {
+        frameStage(camera as PerspectiveCamera, store().size);
         advance(now);
       } catch {
         fail();
@@ -166,6 +170,17 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
   }, [store, rig]);
 
   return null;
+}
+
+/**
+ * The canvas is as wide as the square stage and taller, so widen the view to keep
+ * the stage framed exactly as the poster: same camera, same centre, only more around it.
+ */
+function frameStage(camera: PerspectiveCamera, { width, height }: { width: number; height: number }) {
+  const fov = (2 * Math.atan((height / width) * Math.tan((stage.camera.fov * Math.PI) / 360)) * 180) / Math.PI;
+  if (camera.fov === fov) return;
+  camera.fov = fov;
+  camera.updateProjectionMatrix();
 }
 
 /** Every rig value a frame depends on; a frame is drawn only when one changes. */

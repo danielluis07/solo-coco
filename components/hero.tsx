@@ -88,7 +88,7 @@ export function Hero() {
 function HeroPoster() {
   return (
     <HeroStage>
-      <Image src={poster} alt="" loading="eager" sizes="(min-width: 24rem) 24rem, 100vw" className="size-full" />
+      <Image src={poster} alt="" loading="eager" sizes="(min-width: 80rem) 32rem, (min-width: 24rem) 24rem, 100vw" className="size-full" />
     </HeroStage>
   );
 }
