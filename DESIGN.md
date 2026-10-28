@@ -32,14 +32,13 @@ Borrow the *restraint* of Brazilian modernism for the layout grid so the vernacu
 ### Voice and tone (pt-BR)
 
 - Address the reader as *você*; when the brand speaks of itself, *a gente*, never "a marca".
-- Short sentences, plain verbs, understatement. Exclamation marks almost never.
-- Neutral, everyday Brazilian Portuguese; beach-kiosk vocabulary where it fits (*gelado*, *estupidamente gelado*, *canudo*, *barraca*).
+- Conversational sentences, plain verbs, understatement. Vary sentence length and leave room for ordinary descriptions. Exclamation marks almost never.
+- Neutral, everyday Brazilian Portuguese. Casual contractions and beach-kiosk vocabulary belong only where they sound natural.
 - No dated slang, no English loanwords, no wellness jargon ("hidratação funcional").
-- Rule of thumb: write like a good kiosk sign. Short, sure, never begging.
-- Samples:
-  - "Coco, gelo e paciência."
-  - "A gente tirou o facão da história."
-  - "Tem fruta, mas quem manda é o coco."
+- Write for someone who wants something cold and tasty during an ordinary day. Lead with flavour and refreshment; use beach references occasionally.
+- Use dry humour occasionally. Avoid repeated punchlines, symmetrical sentence pairs and forced slang. Do not invent a founder or origin story.
+- Owner's voice reference, agreed on 2026-10-28: "Coco com um pouco de gás. Basta abrir a lata e tomar gelado." Prefer this measured conversational register over filling the page with expressions such as "é só" or "pra".
+- Keep "Só o coco." as the tagline. Review the surrounding Copy, navigation, buttons, metadata and can-label wording together. Preserve the SoloCoco name, Flavour lineup, product details and visual design. The owner approved the wording in `docs/copy-revision.md` on 2026-10-28.
 
 ### Palette (base tokens)
 
@@ -147,8 +146,9 @@ Decided in [How does the hero behave on phones?](https://github.com/danielluis07
 - **Same Beats, same units.** No Beat is shortened, merged or dropped; the table above holds as is.
 - **Scroll**: about 6 viewport heights instead of 7.
 - **Object**: the coconut is about 60% of the viewport width (desktop scale × 0.73), sitting slightly below centre; the can is scaled down by the same ratio. At the desktop size it would fill about 82% of a 390 px screen and leave the badges no room.
-- **Split headlines** go above and below the object instead of into opposite corners: the first line top-left in the back layer, the second right-aligned near the bottom in the front layer. Display sizes are set in `vw` so a line never overflows: about 17vw for "Só o coco." and "Gelado.", 15vw for "Coco, gelo", 11.5vw for "e paciência.".
-- **Corner copy** stays in the two bottom corners at about 13 px, each block under half the width.
+- **Split headlines** go above and below the object instead of into opposite corners: the first phrase top-left in the back layer, the second right-aligned near the bottom in the front layer. All animated Hero headlines share the opening headline's Bowlby One scale, tight tracking, 0.9 line-height and slight tilt. Phones use 17vw; longer phrases wrap inside the 20 px gutters.
+- **Opening serving line**: "350 ml para tomar bem gelado." sits at the bottom right in Bowlby One, with the headline's tight tracking and line spacing. Its responsive size ranges from 24 to 48 px; phones allow up to 72% of the viewport width for wrapping. The opening product-description line was removed at the owner's request.
+- **Hero controls**: the Hero has no link to the grid or scroll cue. The header and brand statement retain their links to the grid.
 - **Badges**: 104 px instead of 144 px. They still drift up at staggered times, the outer two in front and overlapping the object's edges, the middle one behind it.
 - **Meter** spans the full width (less the 20 px gutters) along the bottom.
 
@@ -211,7 +211,7 @@ Decided in [How does the page remain accessible with reduced motion, keyboard na
 ### Motion preferences and visitor control
 
 - `prefers-reduced-motion: reduce` selects Static immediately, before deferred 3D loading. Replace Girar, Facão, Selos, Fechar, Virar lata, Lata gira and Saída with the poster and every meaningful piece of Copy in normal page flow. Do not play the entrance, rotation, cap movement, badge drift, transformation, particles or panel reveal, and do not retain the long pinned scroll.
-- Disable Lenis/smooth scrolling, rotating-plaque animation and card movement/transitions in Static. State changes remain immediate. Show all three plaque phrases as static text: “Gelado.”, “Sem pressa.” and “Do seu jeito.”
+- Disable Lenis/smooth scrolling, rotating-plaque animation and card movement/transitions in Static. State changes remain immediate. Show all three plaque phrases as static text: “Gelado.”, “Com gás.” and “Com fruta.”
 - Provide an early, keyboard-accessible “Desativar animações” control to select Static for the whole page and remember that choice for the visit. Keep “Ver sabores” immediately available in every tier, including while assets load.
 - Honor system preference changes during the visit. Entering Static releases pinning and preserves the visible content position and focus; never jump back to the Hero. Keep Static for the remainder of the visit, consistent with the runtime policy against automatic upgrades.
 
@@ -219,7 +219,7 @@ Decided in [How does the page remain accessible with reduced motion, keyboard na
 
 - Use stable semantic order: Hero → brand statement → Flavour grid → footer, with one main heading, section headings and a heading for each Flavour. Keep every meaningful phrase accessible once, independent of animation progress; reading does not require scrolling through the Beats.
 - Treat the decorative 3D canvas, animated text duplicates and changing 000→100 counter as hidden from assistive technology. Preserve meaningful meter labels in the readable Copy. Do not announce scroll progress or move focus as Beats change.
-- Preserve the approved anchor destinations: “O coco” goes to the brand statement; “Sabores”, “Ver sabores” and “Escolha seu coco” go to the grid; “Voltar ao topo” goes to the page top. Activation moves to and focuses the destination heading, bypassing the long Hero sequence. Smooth movement is disabled in Static.
+- Preserve the approved anchor destinations: “O coco” goes to the brand statement; “Sabores” and “Ver sabores” go to the grid; “Voltar ao topo” goes to the page top. Activation moves to and focuses the destination heading, bypassing the long Hero sequence. Smooth movement is disabled in Static.
 - Keyboard order follows reading order. Focus remains visible and unobscured by pinning, headers or card content; decorative layers never receive focus. All product names, descriptions, nutrition, quantity and prices remain available without hover, animation or waiting for 3D.
 
 ### Quick-add
@@ -248,10 +248,10 @@ Decided in [How do the rotating statement, Flavour cards, and Quick-add respond 
 | Range | Plaque behavior |
 |-------|-----------------|
 | 0–25% | Hold “Gelado.” |
-| 25–35% | Slide upward to “Sem pressa.” |
-| 35–65% | Hold “Sem pressa.” |
-| 65–75% | Slide upward to “Do seu jeito.” |
-| 75–100% | Hold “Do seu jeito.”, then release pinning |
+| 25–35% | Slide upward to “Com gás.” |
+| 35–65% | Hold “Com gás.” |
+| 65–75% | Slide upward to “Com fruta.” |
+| 75–100% | Hold “Com fruta.”, then release pinning |
 
 - Static shows all three phrases in normal flow, with no plaque movement or statement pinning.
 
@@ -299,7 +299,7 @@ Six Flavours: the plain coconut one and five fruit ones. Each is named by the fr
   | 6 latas  | R$ 37,90  |
   | 12 latas | R$ 69,90  |
 
-- **Hero badges**: three shared across all Flavours, deadpan, no wellness claims: "Só 3 ingredientes", "Levemente gaseificado", "Estupidamente gelado".
+- **Hero badges**: three shared across all Flavours, no wellness claims: "Só 3 ingredientes", "Levemente gaseificado", "Melhor gelado".
 - **Card stats**: kcal and açúcar on every Flavour card, plus a one-line descriptor in the brand voice. The descriptors are written in the Copy ticket.
 
 ## Can label: Barraca
@@ -318,7 +318,7 @@ Decided in [What does each Flavour's can label look like?](https://github.com/da
 - **Flavour band**: the bottom third is the Flavour accent, its top edge a jagged machete cut with a Fibra outline that wraps the whole can and meets itself at the seam. Só o Coco's band is Polpa ("Polpa label on Casca").
 - **Front**: the symbol and the wordmark in Fibra on the husk (Fibra on Casca, 4.6), "Levemente gaseificado" under it; a Polpa roundel with the painted fruit sits across the cut; the Flavour name in Bowlby One on the band, in the Flavour's text colour (§ Visual direction); "350 ml" below.
 - **Side**: a smaller painted fruit on the band at u = 0.5.
-- **Back**: "Só o coco.", the ingredients, and kcal and açúcar per can in Fibra on the husk; "350 ml" and a sign-off on the band. The wording is written in the Copy ticket.
+- **Back**: "Só o coco.", the ingredients, and kcal and açúcar per can in Fibra on the husk; "350 ml" and "Feito no Brasil. Beba gelado." on the band. Current wording is recorded in `docs/copy-revision.md`.
 - Wordmark and Flavour name stay inside the front panel: Bowlby One sets about 0.72 em a glyph.
 
 ### Fruit art
@@ -336,10 +336,10 @@ The symbol drawn in Fibra on the Casca husk reads as a dark ball at grid size. I
 Approved in [What are the SEO metadata, sharing preview, and favicon?](https://github.com/danielluis07/solo-coco/issues/17#issuecomment-6455094227).
 
 - **Page and social title**: “SoloCoco — Só o coco.”
-- **Meta and social description**: “Bebida de coco levemente gaseificada, com seis sabores e jeito de barraca. SoloCoco é uma marca fictícia. Nenhuma compra é realizada.”
+- **Meta and social description**: “Coco com um pouco de gás, em seis sabores. Basta abrir a lata e tomar gelado. Marca fictícia. Nenhuma compra é realizada.”
 - **Language and identity**: document `pt-BR`, Open Graph `pt_BR`, site name `SoloCoco`, Open Graph type `website`.
 - **Sharing image**: one static 1200 × 630 image for Open Graph and large-image social cards. Polpa background with subtle painted-board grain; approved wordmark and “Só o coco.” on the left; large render of the approved plain Só o Coco can on the right, with a hard Fibra shadow. Include a small, readable “Marca fictícia.” disclosure and keep content comfortably inside the edges.
-- **Image alternative text**: “SoloCoco — Só o coco. Lata do sabor Só o Coco sobre fundo claro, com sombra marrom. Marca fictícia.”
+- **Image alternative text**: “Lata de SoloCoco Só o Coco sobre fundo claro, ao lado do nome SoloCoco e da frase Só o coco. Marca fictícia.”
 - **Favicon and icons**: approved machete-cut coconut symbol alone, solid Fibra on a Polpa square with generous padding. Preserve the angled notch at small sizes; omit grain, shadows and lettering. Use the same treatment for browser and home-screen icons.
 - **Deployment-dependent values**: wait for the production URL before setting the canonical URL, `og:url`, absolute sharing-image URL and sitemap URLs. Allow production indexing; keep preview deployments out of search.
 - **Structured data**: no JSON-LD initially. Do not mark illustrative prices, stock, ratings or the fictional brand as real commerce data. Footer Copy remains as previously approved.

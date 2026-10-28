@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const title = "SoloCoco — Só o coco.";
 const description =
-  "Bebida de coco levemente gaseificada, com seis sabores e jeito de barraca. SoloCoco é uma marca fictícia. Nenhuma compra é realizada.";
+  "Coco com um pouco de gás, em seis sabores. Basta abrir a lata e tomar gelado. Marca fictícia. Nenhuma compra é realizada.";
 
 test("search and social previews use the approved identity", async ({ page }) => {
   await page.goto("/");
@@ -28,7 +28,7 @@ test("search and social previews use the approved identity", async ({ page }) =>
 
 test("sharing image has the approved dimensions and exact alternative text", async ({ page, request }) => {
   await page.goto("/");
-  const alt = "SoloCoco — Só o coco. Lata do sabor Só o Coco sobre fundo claro, com sombra marrom. Marca fictícia.";
+  const alt = "Lata de SoloCoco Só o Coco sobre fundo claro, ao lado do nome SoloCoco e da frase Só o coco. Marca fictícia.";
   for (const selector of ['property="og:image:alt"', 'name="twitter:image:alt"']) {
     await expect(page.locator(`head meta[${selector}]`)).toHaveAttribute("content", alt);
   }

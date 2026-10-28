@@ -97,8 +97,7 @@ const anchorLinks = (page: Page): [string, Locator, string][] => {
     ["header “O coco”", banner.getByRole("link", { name: "O coco", exact: true }), statement],
     ["header “Sabores”", banner.getByRole("link", { name: "Sabores", exact: true }), grid],
     ["header “Ver sabores”", banner.getByRole("link", { name: "Ver sabores", exact: true }), grid],
-    ["Hero “Escolha seu coco”", main.getByRole("link", { name: "Escolha seu coco", exact: true }).first(), grid],
-    ["statement “Escolha seu coco”", main.getByRole("link", { name: "Escolha seu coco", exact: true }).last(), grid],
+    ["statement “Ver sabores”", main.getByRole("link", { name: "Ver sabores", exact: true }), grid],
     ["footer “O coco”", footer.getByRole("link", { name: "O coco", exact: true }), statement],
     ["footer “Sabores”", footer.getByRole("link", { name: "Sabores", exact: true }), grid],
     ["footer “Voltar ao topo”", footer.getByRole("link", { name: "Voltar ao topo", exact: true }), top],
@@ -113,13 +112,6 @@ for (const tier of ["static", "moving"] as const) {
     if (tier === "moving") await expect(html(page)).toHaveClass(/\blenis\b/);
 
     for (const [name, link, heading] of anchorLinks(page)) {
-      // Outside Static the Hero's link shows with the intro, at the top of the Vitrine,
-      // which a scroll to its place in the layout would not bring back. Lenis finishes
-      // the last glide first, as it would override a jump made mid-glide.
-      if (tier === "moving" && name.startsWith("Hero")) {
-        await expect(html(page)).not.toHaveClass(/\blenis-scrolling\b/);
-        await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
-      }
       await link.click();
       const destination = page.getByRole("heading", { name: heading, exact: true });
       await expect(destination, name).toBeFocused();
