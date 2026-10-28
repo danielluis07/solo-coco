@@ -26,6 +26,13 @@ It starts a fresh server for each build. The `.example` hostname used by these
 tests is reserved test data. The ordinary `bun run test:e2e` suite assumes an
 unconfigured environment; use the matrix command for deployment-specific checks.
 
+## Hero 3D assets
+
+The coconut, its halves, the can, the Só o Coco label and the Hero poster are
+generated from the sources in `assets/hero/`. Rebuild them all with
+`bun run assets:hero`; it needs Blender 5.2+ and KTX-Software's `ktx` CLI.
+`assets/hero/README.md` lists the sources, licences, outputs and budgets.
+
 ## Getting Started
 
 First, run the development server:

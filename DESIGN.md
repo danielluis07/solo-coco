@@ -86,7 +86,7 @@ The logo is exempt: Casca wordmark on Polpa stays allowed.
 
 ### Motion personality
 
-**Unhurried.** Long eases, no bounce or springy overshoot. One sharp beat only: the machete-crack. The hero choreography designs the specific moves within this rule.
+**Unhurried.** Long eases, no bounce or springy overshoot. Even the machete-crack opens slowly, at the pace of the scroll. The hero choreography designs the specific moves within this rule.
 
 ## Visual direction: Letreiro
 
@@ -133,8 +133,8 @@ Positions are in timeline units out of 100.
 | Units | Beat | What moves |
 |-------|------|------------|
 | 0–20 | Girar | The whole coconut turns slowly (about 1¼ turns, sine ease) with a slight forward tilt. The intro headline "Só o coco." (with the brush underline) and the corner copy leave upwards from about 8. |
-| 20–25 | Facão | The one sharp beat. The coconut tilts towards the reader so the flesh shows, and the machete cap lifts straight up and out of frame (short segment, expo ease-out). The second headline arrives split across the layers. |
-| 25–56 | Selos | The three hero badges drift up past the open coconut at staggered times and slightly different tilts. The middle one passes **behind** the coconut, the other two in front. The headline leaves at about 46. |
+| 20–38 | Facão | The coconut tilts towards the reader so the flesh and the coconut water show, and the machete cap cracks open and lifts straight up and out of frame. It opens slowly with the scroll: the cap pries off the crack first, then speeds up out of frame (ease-in). The second headline arrives split across the layers. |
+| 38–56 | Selos | The three hero badges drift up past the open coconut at staggered times and slightly different tilts. The middle one passes **behind** the coconut, the other two in front. The headline leaves at about 46. |
 | 56–62 | Fechar | The cap comes back down and the coconut levels out (long inOut ease). |
 | 62–75 | Virar lata | The coconut shakes, spins one full turn and is hidden by the particle burst (fibres, husk chips, droplets). The can replaces it **in place** with a counter-spin settling to front. A painted meter counts 000 → 100 through "Coco inteiro → Chacoalhando → Na lata" (59–78). |
 | 75–92 | Lata gira | A headline arrives top-left, and the can turns slowly through 180° to show its back label, with a short body line in the opposite corner. |
@@ -154,7 +154,7 @@ Decided in [How does the hero behave on phones?](https://github.com/danielluis07
 
 ### Known trade-off
 
-Because the hero scrubs, a fast scroller compresses the Facão beat and a slow one stretches it. Accepted: the cut is kept short in units and on an expo ease, so it still reads as the sharp beat at normal speeds.
+Because the hero scrubs, a fast scroller compresses the Facão beat and a slow one stretches it. Accepted: the crack spans about 17 units, so at normal speeds the visitor watches the cap pry off and rise.
 
 ## Performance, loading and runtime fallbacks
 
