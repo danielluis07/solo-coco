@@ -3,12 +3,13 @@ import {
   anchors,
   brand,
   copy,
+  defaultPack,
   flavours,
   flavourStats,
+  packLabel,
   type Flavour,
 } from "@/content/page";
-import { CanPlaceholder } from "./brand";
-import { QuickAdd, QuickAddProvider } from "./quick-add";
+import { FlavourCan } from "./flavour-can";
 
 const { grid } = copy;
 
@@ -33,15 +34,13 @@ export function FlavourGrid() {
         <p className="text-lg">{grid.intro}</p>
         <p className="rounded-board-alt bg-isopor px-3 py-1 text-sm font-semibold">{grid.disclosure}</p>
       </div>
-      <QuickAddProvider>
-        <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {flavours.map((flavour, i) => (
-            <li key={flavour.slug}>
-              <FlavourCard flavour={flavour} tilt={tilts[i % tilts.length]} />
-            </li>
-          ))}
-        </ul>
-      </QuickAddProvider>
+      <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {flavours.map((flavour, i) => (
+          <li key={flavour.slug}>
+            <FlavourCard flavour={flavour} tilt={tilts[i % tilts.length]} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -58,7 +57,7 @@ function FlavourCard({ flavour, tilt }: { flavour: Flavour; tilt: string }) {
       data-flavour={flavour.slug}
       style={{ backgroundColor: flavour.accent, "--tilt": tilt } as CSSProperties}
       className={`${inkClass[flavour.ink]} flex h-full flex-col rounded-board p-6 shadow-board motion-safe:rotate-(--tilt) motion-safe:transition-[rotate] motion-safe:duration-240 motion-safe:ease-out motion-safe:hover:rotate-0 motion-safe:focus-within:rotate-0`}>
-      <CanPlaceholder accent={flavour.accent} className="mx-auto h-40 w-auto" />
+      <FlavourCan slug={flavour.slug} />
       <h3 id={headingId} className="mt-5 font-display leading-[0.95]">
         <span className="block font-sans text-sm font-bold tracking-wide uppercase">{brand}</span>{" "}
         <span className="block text-3xl">{flavour.name}</span>
@@ -66,7 +65,7 @@ function FlavourCard({ flavour, tilt }: { flavour: Flavour; tilt: string }) {
       <p className="mt-2 leading-snug">{flavour.descriptor}</p>
       <p className="mt-4 text-sm font-semibold tabular-nums">{flavourStats(flavour)}</p>
       <p className="text-sm">{grid.perCan}</p>
-      <QuickAdd flavour={flavour} />
+      <p className="mt-auto pt-5 font-display text-xl tabular-nums">{packLabel(defaultPack)}</p>
     </article>
   );
 }

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { copy, flavours, flavourTitle, packLabel, packs } from "@/content/page";
+import { copy, flavours, flavourTitle, packLabel, defaultPack } from "@/content/page";
 
 const html = (page: Page) => page.locator("html");
 const toggle = (page: Page) =>
@@ -70,13 +70,11 @@ test("turning on reduced motion mid-visit switches to Static and keeps focus and
   await expectTier(page, "moving");
   await expect(html(page)).toHaveClass(/\blenis\b/);
 
-  const opener = page
-    .getByRole("article", { name: flavourTitle(flavours[1]) })
-    .getByRole("button", { name: copy.quickAdd.open, exact: true });
+  const opener = page.getByRole("contentinfo").getByRole("link", { name: "Voltar ao topo", exact: true });
   await opener.focus();
   await expect(opener).toBeInViewport();
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-  // Releasing the statement pin shortens the page above, so the opener's place
+  // Releasing the statement pin shortens the page above, so the footer link's place
   // in the viewport is what stays, not the scroll offset.
   const before = (await opener.boundingBox())!.y;
 
@@ -138,17 +136,12 @@ test("keyboard activation of an anchor focuses its heading", async ({ page }) =>
   await expect(page).toHaveURL(/#sabores$/);
 });
 
-test("a Flavour's Quick-add selection survives a forced tier change", async ({ page }) => {
+test("Flavour prices remain visible after a forced tier change", async ({ page }) => {
   await page.goto("/");
   await expectTier(page, "moving");
   const card = page.getByRole("article", { name: flavourTitle(flavours[0]) });
-  const six = packs[1];
-
-  await card.getByRole("button", { name: copy.quickAdd.open, exact: true }).click();
-  await card.getByRole("radio", { name: packLabel(six), exact: true }).click();
-  await expect(card.getByText(packLabel(six), { exact: true })).toBeVisible();
-
+  await expect(card.getByText(packLabel(defaultPack), { exact: true })).toBeVisible();
   await toggle(page).click();
   await expectTier(page, "static");
-  await expect(card.getByText(packLabel(six), { exact: true })).toBeVisible();
+  await expect(card.getByText(packLabel(defaultPack), { exact: true })).toBeVisible();
 });

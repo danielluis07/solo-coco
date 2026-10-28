@@ -8,12 +8,14 @@ bun run assets:hero
 
 `scripts/build-hero-assets.ts` runs the whole pipeline:
 
-1. Rasterises `label-so-o-coco.svg` to a 2048 × 1024 PNG in headless Chromium, with the fonts beside it.
+1. Builds six committed SVG labels in `assets/flavours/` from `assets/brand/label-template.svg`, the original drawn wordmark and symbol in `assets/brand/`, and the painted fruit paths in `scripts/build-brand-assets.ts`. It rasterises each to 2048 × 1024 in Chromium with the committed fonts. The plain label also replaces `assets/hero/label-so-o-coco.svg` for the Hero.
 2. Runs `build_hero.py` in Blender headlessly to build the coconut, its halves and the can, export them as GLB, and render the poster.
 3. Optimises both GLBs with `gltf-transform optimize --compress meshopt --texture-compress ktx2`. The extra flags keep the named nodes, the materials and the can's label UVs, and stop the halves' crack edges being simplified off the whole coconut.
 4. Encodes the label as UASTC KTX2 (zstd, with mipmaps).
 5. Copies three's Basis transcoder (`basis_transcoder.js` and `.wasm`), so the decoders are self-hosted.
 6. Checks the triangle and texture budgets and fails the build if any is missed.
+7. Renders the very same can mesh six times in Blender, swapping only `Body_Label`'s texture. Camera, pose, stage lighting, colour management and transparent background remain fixed. Exports 360 × 520 WebP cards to `public/flavours/`, checks alpha and an 80 KiB per-card ceiling. Cards use a 400 px proximity observer plus native lazy loading, reserved dimensions, a no-JavaScript image fallback and no additional canvas.
+8. Generates `lib/brand-art.ts` from the canonical brand SVG paths, used inline with inherited ink in the header and footer. Rebuilds the standalone, embedded-image `assets/metadata/sharing-image.svg` from the plain can render, wordmark and Figtree; exports its 1200 × 630 PNG with Chromium. Rebuilds `assets/metadata/icon.svg` from the symbol and exports 32 px browser PNG/ICO and the 180 px Apple PNG with Sharp.
 
 The outputs go to `public/hero/` and are committed. Intermediates go to `assets/hero/.build/`, which is ignored.
 
@@ -29,7 +31,7 @@ The outputs go to `public/hero/` and are committed. Intermediates go to `assets/
 |------|------------|
 | `build_hero.py` | Blender Python script. It lathes the can and adds its tab, with one rectangular UV strip on `Body_Label`. It shapes the whole coconut (a mature brown coconut, oval and lying on its side) and paints its fibrous husk colour and normal maps procedurally. It splits it through the middle along a zigzag crack, lines both halves with a white flesh shell, fills the bottom half with coconut water, and pivots both halves on the crack line. It renders the poster. |
 | `stage.json` | The camera, lights and first-frame pose, shared by the poster render and the live scene (`components/hero-scene.tsx`), so the poster is the first 3D frame. |
-| `label-so-o-coco.svg` | The Só o Coco can label (DESIGN.md § Can label: Barraca). The back-panel wording is a placeholder until the Copy ticket approves it. |
+| `label-so-o-coco.svg` | The Só o Coco can label (DESIGN.md § Can label: Barraca). Generated from the shared Barraca template with the final wordmark and symbol. |
 | `fonts/` | Bowlby One and Figtree, used to rasterise the label. |
 
 ## Licences
@@ -39,6 +41,12 @@ The outputs go to `public/hero/` and are committed. Intermediates go to `assets/
 - **Basis transcoder** (`public/hero/basis/`): from three.js (MIT), version-locked to the installed `three`.
 
 No Editorial, NC or ND models and no free-tier AI output are used (ADR 0002).
+
+The six fruit drawings and custom wordmark/symbol paths are original vector artwork. No AI generation or outside image references were used. Generated SVGs, runtime path data and raster outputs are committed so a normal application build needs no Blender, KTX tools or image-generation service. `sharp` is a direct development dependency for repeatable image exports. The fonts retain their existing OFL licences.
+
+## Final asset profiling
+
+See `assets/brand/PROFILE.md` for local validation and the physical-device procedure. File-size checks do not establish the A54 performance acceptance criterion or field INP compliance.
 
 ## Outputs and budgets
 

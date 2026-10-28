@@ -15,9 +15,9 @@ takes precedence. Previews, development and unconfigured environments get
 These values are read during the build; rebuild after changing them.
 
 `public/sharing-image.png` (1200 × 630), `app/favicon.ico` (32 × 32),
-`app/icon.png` (32 × 32) and `app/apple-icon.png` (180 × 180) are static
-placeholders. Replace the files at the same paths and sizes when final artwork
-arrives; no code change is needed. Editable SVG sources are in `assets/metadata/`.
+`app/icon.png` (32 × 32) and `app/apple-icon.png` (180 × 180) are static files
+generated from the original brand SVGs and the rendered Hero can. Rebuild with
+`bun run assets:hero`. Editable SVG sources are in `assets/metadata/` and `assets/brand/`.
 The approved title, description and image alt text live in `content/page.ts`.
 
 Run `bun run test:metadata` to build and check five deployment scenarios with

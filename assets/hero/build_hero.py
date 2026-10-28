@@ -639,7 +639,32 @@ def main():
     export(OUT / "can.glb", [can_obj, *can_obj.children], images=False)
 
     render_poster(whole, [*pieces.values(), can_obj, *can_obj.children])
+    render_cards(can_obj, [whole, *pieces.values()], mats["Body_Label"])
     print(f"build_hero: can {can_tris} triangles; poster {STAGE['posterSize']}px")
+
+
+def render_cards(can_obj, hidden, label_material):
+    """The exact Hero can mesh and UVs; one fixed camera, pose and lighting for all labels."""
+    scene = bpy.context.scene
+    for obj in hidden:
+        obj.hide_render = True
+    can_obj.hide_render = False
+    for obj in can_obj.children:
+        obj.hide_render = False
+    can_obj.rotation_euler = (math.radians(-7), math.radians(-8), math.radians(-6))
+    camera = scene.camera
+    camera.data.type = "ORTHO"
+    camera.data.ortho_scale = 3.25
+    camera.location = (0, -6, 1.8)
+    camera.rotation_euler = (-camera.location).to_track_quat("-Z", "Y").to_euler()
+    scene.render.resolution_x = 360
+    scene.render.resolution_y = 520
+    scene.cycles.samples = 64
+    texture = next(n for n in label_material.node_tree.nodes if n.type == "TEX_IMAGE")
+    for slug in json.loads((OUT / "flavours.json").read_text()):
+        texture.image = bpy.data.images.load(str(OUT / f"label-{slug}.png"), check_existing=True)
+        scene.render.filepath = str(OUT / f"can-{slug}.png")
+        bpy.ops.render.render(write_still=True)
 
 
 main()

@@ -1,0 +1,163 @@
+{
+  "environment": "Desktop Chromium, 393x852, CPU x4, 4 Mbps / 150 ms; emulation is not an A54",
+  "posterAndFontsReadyUpperBoundMs": 1699,
+  "beforeGrid": [
+    {
+      "path": "/_next/static/media/4032351b19cb998e-s.p.19g-lkcx7iw64.woff2",
+      "transfer": 10528,
+      "encoded": 10228,
+      "startMs": 214
+    },
+    {
+      "path": "/_next/static/media/4e6106e5bf19ccfe-s.p.0r60xfxm_x2-_.woff2",
+      "transfer": 21800,
+      "encoded": 21500,
+      "startMs": 218
+    },
+    {
+      "path": "/_next/static/media/cb4b92673aedbbad-s.p.0-95eo-012xnf.woff2",
+      "transfer": 20484,
+      "encoded": 20184,
+      "startMs": 220
+    },
+    {
+      "path": "/_next/image",
+      "transfer": 40146,
+      "encoded": 39846,
+      "startMs": 251
+    },
+    {
+      "path": "/_next/static/chunks/38h509iqd504-.css",
+      "transfer": 7789,
+      "encoded": 7489,
+      "startMs": 253
+    },
+    {
+      "path": "/_next/static/chunks/01ce6pg25fldo.js",
+      "transfer": 7895,
+      "encoded": 7595,
+      "startMs": 255
+    },
+    {
+      "path": "/_next/static/chunks/0yo_frkpn_lca.js",
+      "transfer": 49298,
+      "encoded": 48998,
+      "startMs": 257
+    },
+    {
+      "path": "/_next/static/chunks/20box33a0_n53.js",
+      "transfer": 72994,
+      "encoded": 72694,
+      "startMs": 257
+    },
+    {
+      "path": "/_next/static/chunks/turbopack-3-ry682tkyiqk.js",
+      "transfer": 4259,
+      "encoded": 3959,
+      "startMs": 258
+    },
+    {
+      "path": "/_next/static/chunks/3ql6piad1--kr.js",
+      "transfer": 6001,
+      "encoded": 5701,
+      "startMs": 259
+    },
+    {
+      "path": "/_next/static/chunks/2w8gb14a1bt65.js",
+      "transfer": 2048,
+      "encoded": 1748,
+      "startMs": 260
+    },
+    {
+      "path": "/_next/static/chunks/25qiel7de6nic.js",
+      "transfer": 11231,
+      "encoded": 10931,
+      "startMs": 261
+    },
+    {
+      "path": "/_next/static/chunks/3z1kyy61ode20.js",
+      "transfer": 2563,
+      "encoded": 2263,
+      "startMs": 1917
+    },
+    {
+      "path": "/_next/static/chunks/2yhk9aeug-aqs.js",
+      "transfer": 27636,
+      "encoded": 27336,
+      "startMs": 1923
+    },
+    {
+      "path": "/_next/static/chunks/0icqp5p40c_j3.js",
+      "transfer": 17919,
+      "encoded": 17619,
+      "startMs": 1930
+    },
+    {
+      "path": "/_next/static/chunks/0-krvzw6s02f7.js",
+      "transfer": 1243,
+      "encoded": 943,
+      "startMs": 1938
+    },
+    {
+      "path": "/_next/static/chunks/1soby0k5lulp4.js",
+      "transfer": 5980,
+      "encoded": 5680,
+      "startMs": 1947
+    },
+    {
+      "path": "/_next/static/chunks/0sj4qu7xn091x.js",
+      "transfer": 285539,
+      "encoded": 285239,
+      "startMs": 2008
+    },
+    {
+      "path": "/hero/coconut.glb",
+      "transfer": 1264567,
+      "encoded": 1264267,
+      "startMs": 4944
+    },
+    {
+      "path": "/hero/can.glb",
+      "transfer": 8247,
+      "encoded": 7947,
+      "startMs": 4967
+    },
+    {
+      "path": "/hero/label-so-o-coco.ktx2",
+      "transfer": 1479079,
+      "encoded": 1478779,
+      "startMs": 4991
+    },
+    {
+      "path": "/hero/basis/basis_transcoder.js",
+      "transfer": 15562,
+      "encoded": 15262,
+      "startMs": 10356
+    },
+    {
+      "path": "/hero/basis/basis_transcoder.wasm",
+      "transfer": 249248,
+      "encoded": 248948,
+      "startMs": 10359
+    }
+  ],
+  "cls": 1.0844321527427596,
+  "interactionMaxMs": 192,
+  "navigation": [
+    {
+      "transfer": 11613,
+      "encoded": 11313
+    }
+  ],
+  "paints": [
+    {
+      "name": "first-paint",
+      "ms": 1020
+    },
+    {
+      "name": "first-contentful-paint",
+      "ms": 1020
+    }
+  ],
+  "note": "interactionMaxMs is a lab event duration, not field INP. Transfer sizes include local HTTP headers. Inspect the resource table to separate initial and deferred requests."
+}
