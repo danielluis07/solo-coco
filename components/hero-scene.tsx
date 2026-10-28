@@ -3,11 +3,12 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { gsap } from "gsap";
 import { useEffect, useRef } from "react";
-import { Group, Vector3 } from "three";
+import type { Vector3 } from "three";
 import stage from "@/assets/hero/stage.json";
 import { createFpsSampler } from "@/lib/fps-sampler";
 import { loadHeroAssets, type HeroAssets } from "@/lib/hero-assets";
 import type { HeroRig } from "@/lib/hero-rig";
+import type { Tier } from "@/lib/motion-tier";
 
 // The live Hero: the generated coconut and can, posed from the rig every frame.
 // Client-only and loaded on demand. Rules live in DESIGN.md § Hero choreography and
@@ -18,6 +19,16 @@ const fpsWarmUpMs = 1_000;
 
 /** Pixel-ratio cap per tier. */
 const pixelRatio = { full: 1.5, lite: 1 };
+
+/** How far the cap travels at full lift, in the coconut's own units: up, back, and tipped back (radians). */
+const capLift = { up: 2.6, back: 0.3, tilt: 0.5 };
+
+/** The pre-swap shake at full strength: amplitude in scene units, and a jitter frequency per axis. */
+const shake = { amplitude: 0.05, x: 53, y: 41, roll: 47 };
+
+/** Below this scale an object is hidden, and it never reaches zero (a singular matrix). */
+const hiddenScale = 0.001;
+const minScale = 0.0001;
 
 export type HeroSceneEvents = {
   /** A complete first frame is on screen. */
@@ -30,7 +41,7 @@ export type HeroSceneEvents = {
   onRendering: (rendering: boolean) => void;
 };
 
-type Props = HeroSceneEvents & { rig: HeroRig; tier: "full" | "lite" };
+type Props = HeroSceneEvents & { rig: HeroRig; tier: Exclude<Tier, "static"> };
 
 export default function HeroScene({ rig, tier, ...events }: Props) {
   return (
@@ -81,7 +92,9 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
 
     const sampler = createFpsSampler({ warmUpMs: fpsWarmUpMs, onWindow: (fps) => events.current.onFps(fps) });
     let rendering = true;
-    let last: number[] = [];
+    let renderedKey: number[] = [];
+    // The cap's place on the crack line, where every lift starts from.
+    let capRest: Vector3 | null = null;
 
     const tick = (seconds: number) => {
       if (!assets) return;
@@ -96,11 +109,11 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
         return;
       }
       const { size } = store();
-      const next = [...posed(rig), size.width, size.height];
-      const moving = rig.shake > 0 || next.some((value, i) => value !== last[i]);
-      last = next;
+      const key = [...frameKey(rig), size.width, size.height];
+      const moving = rig.shake > 0 || key.some((value, i) => value !== renderedKey[i]);
+      renderedKey = key;
       if (moving) {
-        pose(assets, rig, seconds);
+        pose(assets, capRest!, rig, seconds);
         render(now);
       }
       sampler.tick(now, moving);
@@ -125,8 +138,9 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
       .then(async (loaded) => {
         if (stopped) return loaded.dispose();
         assets = loaded;
+        capRest = loaded.coconut.top.position.clone();
         scene.add(loaded.coconut.root, loaded.can);
-        pose(loaded, rig, 0);
+        pose(loaded, capRest, rig, 0);
         // Compile before the first frame, so it is complete when it lands.
         await gl.compileAsync(scene, camera);
         if (stopped) return;
@@ -134,7 +148,7 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
         // The frame is presented on the next animation frame.
         requestAnimationFrame(() => {
           if (stopped) return;
-          last = [];
+          renderedKey = [];
           gsap.ticker.add(tick);
           events.current.onRendering(true);
           events.current.onFirstFrame();
@@ -154,8 +168,8 @@ function Driver({ rig, ...props }: HeroSceneEvents & { rig: HeroRig }) {
   return null;
 }
 
-/** Every rig value a frame depends on. */
-function posed(rig: HeroRig) {
+/** Every rig value a frame depends on; a frame is drawn only when one changes. */
+function frameKey(rig: HeroRig) {
   const { coconut, cap, can, entrance } = rig;
   return [
     coconut.y,
@@ -171,28 +185,28 @@ function posed(rig: HeroRig) {
   ];
 }
 
-const capBase = new WeakMap<object, Vector3>();
-
 /** Applies the rig to the scene graph; the shake needs the clock. */
-function pose({ coconut, can }: HeroAssets, rig: HeroRig, seconds: number) {
-  const shake = rig.shake * 0.05;
-  const root = coconut.root as Group;
+function pose({ coconut, can }: HeroAssets, capRest: Vector3, rig: HeroRig, seconds: number) {
+  const jitter = rig.shake * shake.amplitude;
+  const { root } = coconut;
   const scale = rig.coconut.scale * rig.entrance.scale;
-  root.visible = scale > 0.001;
-  root.position.set(Math.sin(seconds * 53) * shake, rig.coconut.y + rig.entrance.y + Math.sin(seconds * 41) * shake * 0.6, 0);
-  root.rotation.set(rig.coconut.rotX, rig.coconut.rotY, rig.entrance.rotZ + Math.sin(seconds * 47) * shake * 1.5);
-  root.scale.setScalar(Math.max(scale, 0.0001));
+  root.visible = scale > hiddenScale;
+  root.position.set(
+    Math.sin(seconds * shake.x) * jitter,
+    rig.coconut.y + rig.entrance.y + Math.sin(seconds * shake.y) * jitter * 0.6,
+    0,
+  );
+  root.rotation.set(rig.coconut.rotX, rig.coconut.rotY, rig.entrance.rotZ + Math.sin(seconds * shake.roll) * jitter * 1.5);
+  root.scale.setScalar(Math.max(scale, minScale));
 
   // Whole until the machete; then the two halves, the cap lifting off its crack line.
   const { lift } = rig.cap;
   coconut.whole.visible = lift === 0;
   coconut.top.visible = coconut.bottom.visible = lift > 0;
-  let base = capBase.get(coconut.top);
-  if (!base) capBase.set(coconut.top, (base = coconut.top.position.clone()));
-  coconut.top.position.set(base.x, base.y + lift * 2.6, base.z - lift * 0.3);
-  coconut.top.rotation.x = -lift * 0.5;
+  coconut.top.position.set(capRest.x, capRest.y + lift * capLift.up, capRest.z - lift * capLift.back);
+  coconut.top.rotation.x = -lift * capLift.tilt;
 
-  can.visible = rig.can.scale > 0.001;
-  can.scale.setScalar(Math.max(rig.can.scale, 0.0001));
+  can.visible = rig.can.scale > hiddenScale;
+  can.scale.setScalar(Math.max(rig.can.scale, minScale));
   can.rotation.y = rig.can.rotY;
 }

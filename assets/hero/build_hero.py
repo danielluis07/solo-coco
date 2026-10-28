@@ -181,7 +181,7 @@ def uv_sphere(u_segments, v_segments):
 
 
 def whole_coconut(mats):
-    bm = uv_sphere(72, 44)
+    bm = uv_sphere(96, 56)
     for vert in bm.verts:
         vert.co = coconut_point(vert.co)
     for face in bm.faces:

@@ -9,7 +9,7 @@
 // Windows install) and KTX-Software's `ktx` CLI on PATH.
 
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
@@ -21,10 +21,16 @@ const source = join(root, "assets/hero");
 const work = join(root, "assets/hero/.build");
 const out = join(root, "public/hero");
 
-/** ADR 0002: triangles per model, and texture edge lengths. */
+/**
+ * ADR 0002 triangle budgets, per model as it is drawn: the whole coconut and the
+ * two halves are never on screen together, so each state is held to the budget.
+ */
 const budgets = {
-  "coconut.glb": { minTriangles: 10_000, maxTriangles: 25_000 },
-  "can.glb": { minTriangles: 2_000, maxTriangles: 6_000 },
+  "coconut.glb": [
+    { nodes: ["Coconut"], min: 10_000, max: 25_000 },
+    { nodes: ["Coconut_Top", "Coconut_Bottom"], min: 10_000, max: 25_000 },
+  ],
+  "can.glb": [{ nodes: ["Can"], min: 2_000, max: 6_000 }],
 };
 const textureSize = { min: 1024, max: 2048 };
 
@@ -53,33 +59,46 @@ async function rasteriseLabel(svg: string, png: string) {
   await browser.close();
 }
 
+function checkTextureSize(name: string, w: number, h: number) {
+  if (w % 4 || h % 4 || Math.max(w, h) > textureSize.max || Math.max(w, h) < textureSize.min) {
+    throw new Error(`${name} is ${w}×${h}`);
+  }
+}
+
 async function checkBudgets() {
   await MeshoptDecoder.ready;
   const io = new NodeIO()
     .registerExtensions(ALL_EXTENSIONS)
     .registerDependencies({ "meshopt.decoder": MeshoptDecoder });
-  for (const [file, budget] of Object.entries(budgets)) {
+  for (const [file, models] of Object.entries(budgets)) {
     const document = await io.read(join(out, file));
-    let triangles = 0;
-    for (const mesh of document.getRoot().listMeshes()) {
-      for (const primitive of mesh.listPrimitives()) {
-        const count = primitive.getIndices()?.getCount() ?? primitive.getAttribute("POSITION")!.getCount();
-        triangles += count / 3;
-      }
+    // A node and everything under it: optimising can move a parent's mesh onto a child.
+    const triangles = (name: string) => {
+      const node = document.getRoot().listNodes().find((n) => n.getName() === name);
+      if (!node) throw new Error(`${file}: no node ${name}`);
+      let count = 0;
+      node.traverse((child) => {
+        for (const primitive of child.getMesh()?.listPrimitives() ?? []) {
+          count += (primitive.getIndices()?.getCount() ?? primitive.getAttribute("POSITION")!.getCount()) / 3;
+        }
+      });
+      return count;
+    };
+    for (const { nodes, min, max } of models) {
+      const count = nodes.reduce((sum, name) => sum + triangles(name), 0);
+      if (count < min || count > max) throw new Error(`${file}: ${nodes.join(" + ")} has ${count} triangles, outside ${min}–${max}`);
+      console.log(`${file}: ${nodes.join(" + ")} ${count} triangles`);
     }
     for (const texture of document.getRoot().listTextures()) {
       const [w, h] = texture.getSize() ?? [0, 0];
-      if (w % 4 || h % 4 || Math.max(w, h) > textureSize.max || Math.max(w, h) < textureSize.min) {
-        throw new Error(`${file}: texture ${texture.getName()} is ${w}×${h}`);
-      }
+      checkTextureSize(`${file}: texture ${texture.getName()}`, w, h);
     }
-    if (triangles < budget.minTriangles || triangles > budget.maxTriangles) {
-      throw new Error(`${file}: ${triangles} triangles is outside ${budget.minTriangles}–${budget.maxTriangles}`);
-    }
-    const nodes = document.getRoot().listNodes().map((n) => n.getName());
-    const materials = document.getRoot().listMaterials().map((m) => m.getName());
-    console.log(`${file}: ${triangles} triangles; nodes ${nodes.join(", ")}; materials ${materials.join(", ")}`);
+    console.log(`${file}: materials ${document.getRoot().listMaterials().map((m) => m.getName()).join(", ")}`);
   }
+
+  // KTX2 header: pixelWidth and pixelHeight follow the identifier, vkFormat and typeSize.
+  const label = new DataView((await readFile(join(out, "label-so-o-coco.ktx2"))).buffer);
+  checkTextureSize("label-so-o-coco.ktx2", label.getUint32(20, true), label.getUint32(24, true));
 }
 
 await rm(work, { recursive: true, force: true });

@@ -19,6 +19,9 @@ const pinLength = { desktop: 7, phone: 6 };
 /** Seconds the scene takes to catch up with the scroll position. */
 const smoothing = 1.2;
 
+/** Waits out ScrollTrigger's own resize refresh before measuring again. */
+const resizeSettleMs = 250;
+
 /** Screen pixels per scene unit at the object's depth, for a stage this tall. */
 function pixelsPerUnit(height: number) {
   const distance = stage.camera.position[2];
@@ -56,32 +59,49 @@ export function startHeroSequence(rig: HeroRig, elements: HeroSequenceElements):
     object.dataset.entrance = "skipped";
   };
 
-  // The pin adds scroll below the stage; keep whatever the visitor is looking at in place.
-  const before = scrollY > 0 ? captureViewport() : null;
-  const context = gsap.context(() => {
-    // A stage taller than the viewport would be cut off while pinned, so it scrubs in flow.
+  let context: gsap.Context | null = null;
+  let pinning: boolean | null = null;
+  let settle: ReturnType<typeof setTimeout> | undefined;
+
+  // A row taller than the viewport would be cut off while pinned, so it scrubs in flow.
+  const update = () => {
     const fits = pinned.offsetHeight <= innerHeight;
+    if (fits === pinning) return;
+    pinning = fits;
+    context?.revert();
     object.dataset.pinned = String(fits);
-    const length = () => (matchMedia(phoneQuery).matches ? pinLength.phone : pinLength.desktop);
-    ScrollTrigger.create({
-      trigger: pinned,
-      animation: timeline,
-      scrub: smoothing,
-      invalidateOnRefresh: true,
-      // The Hero comes before the statement, so it measures first.
-      refreshPriority: 1,
-      // Scroll owns the coconut from the first scrolled pixel; the entrance gives way.
-      onUpdate: (self) => {
-        if (self.progress > 0) skipEntrance();
-      },
-      ...(fits
-        ? { pin: true, start: "center center", end: () => `+=${innerHeight * length()}` }
-        : { start: "top bottom", end: "bottom top" }),
+    context = gsap.context(() => {
+      const length = () => (matchMedia(phoneQuery).matches ? pinLength.phone : pinLength.desktop);
+      ScrollTrigger.create({
+        trigger: pinned,
+        animation: timeline,
+        scrub: smoothing,
+        invalidateOnRefresh: true,
+        // The Hero comes before the statement, so it measures first.
+        refreshPriority: 1,
+        // Scroll owns the coconut from the first scrolled pixel; the entrance gives way.
+        onUpdate: (self) => {
+          if (self.progress > 0) skipEntrance();
+        },
+        ...(fits
+          ? { pin: true, start: "center center", end: () => `+=${innerHeight * length()}` }
+          : { start: "top bottom", end: "bottom top" }),
+      });
     });
-  });
-  ScrollTrigger.sort();
-  ScrollTrigger.refresh();
+    ScrollTrigger.sort();
+    ScrollTrigger.refresh();
+  };
+
+  const onResize = () => {
+    clearTimeout(settle);
+    settle = setTimeout(update, resizeSettleMs);
+  };
+
+  // The pin adds scroll below the row; keep whatever the visitor is looking at in place.
+  const before = scrollY > 0 ? captureViewport() : null;
+  update();
   if (before) restoreViewport(before);
+  addEventListener("resize", onResize);
 
   const showEntrance = () => {
     const { y, scale, rotZ } = rig.entrance;
@@ -105,8 +125,10 @@ export function startHeroSequence(rig: HeroRig, elements: HeroSequenceElements):
     unit: () => timeline.time(),
     skipEntrance,
     stop: () => {
+      removeEventListener("resize", onResize);
+      clearTimeout(settle);
       entrance?.progress(1).kill();
-      context.revert();
+      context?.revert();
       timeline.kill();
       poster.style.transform = "";
       delete object.dataset.pinned;
