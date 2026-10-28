@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* The Vitrine: the pinned, layered Hero outside Static (DESIGN.md § Hero choreography).
+   The page is marked before its first paint (lib/motion-signals.ts) and drops the
+   layout as soon as it is Static. `:is` outranks the in-flow Static utilities. */
+@custom-variant vitrine (&:is(html[data-hero-layout="vitrine"]:not([data-motion-tier="static"]) *));
+
 /* Letreiro skin. Values from DESIGN.md § Brand core and § Visual direction. */
 @theme inline {
   --font-display: var(--font-bowlby-one);
@@ -29,6 +34,15 @@
   --radius-board: 18px 10px 16px 8px;
   --radius-board-alt: 10px 16px 8px 18px;
 
+  /* The intro Copy settles in from the first paint, unhurried, while the coconut rises. */
+  --animate-settle: settle 1.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  @keyframes settle {
+    from {
+      opacity: 0;
+      translate: 0 40px;
+    }
+  }
+
   /* Quick-add reveal: content fades in, layout reflows immediately. */
   --animate-fade-in: fade-in 180ms ease-out;
   @keyframes fade-in {
@@ -46,6 +60,12 @@
 /* The same grain in Polpa, so it shows on the dark Fibra section. */
 @utility bg-grain-dark {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.98 0 0 0 0 0.98 0 0 0 0 0.96 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The uneven, hand-cut top edge of the Saída panel: the statement's cut
+   (components/brand.tsx) as a clip, so the grain runs right up to it. */
+@utility clip-hand-cut {
+  clip-path: polygon(0 14px, 11.667% 9px, 25.833% 16px, 39.167% 6px, 53.333% 13px, 68.333% 4px, 82.5% 12px, 100% 7px, 100% 100%, 0 100%);
 }
 
 @layer base {

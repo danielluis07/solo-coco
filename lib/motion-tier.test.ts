@@ -129,6 +129,13 @@ describe("never upgrades", () => {
     { type: "opted-out" },
   ];
 
+  // The controller re-renders the page whenever the state object changes, so
+  // a healthy frame rate while the visitor scrolls must keep the same object.
+  test("a healthy fps window with no low windows pending leaves the state as it is", () => {
+    const state = [started, ready].reduce(nextMotionState, initialMotionState(desktop));
+    expect(nextMotionState(state, ok)).toBe(state);
+  });
+
   test.each([desktop, phone])("random sequences on $deviceClass", (inputs) => {
     const random = mulberry32(inputs.deviceClass === "phone" ? 20 : 18);
     for (let sequence = 0; sequence < 500; sequence++) {

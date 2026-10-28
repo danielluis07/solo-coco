@@ -19,8 +19,16 @@ function findOverflow(page: Page) {
     const describe = (el: Element) =>
       `${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 40)}"`;
 
+    // Visually hidden on purpose (`sr-only`, under any variant): clipped down to nothing.
+    const visuallyHidden = (el: Element) => {
+      for (let node: Element | null = el; node; node = node.parentElement) {
+        if (getComputedStyle(node).clipPath === "inset(50%)") return true;
+      }
+      return false;
+    };
+
     for (const el of document.body.querySelectorAll<HTMLElement>("*")) {
-      if (el.closest("svg, .sr-only")) continue;
+      if (el.closest("svg") || visuallyHidden(el)) continue;
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
       if (rect.left < -1 || rect.right > vw + 1) {

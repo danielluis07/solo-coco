@@ -4,6 +4,7 @@ import "./globals.css";
 import { MotionProvider } from "@/components/motion-provider";
 import { bowlbyOne, figtree } from "@/fonts";
 import { seo } from "@/content/page";
+import { heroLayoutScript } from "@/lib/motion-signals";
 
 // NODE_ENV is also "production" for preview builds, so it cannot decide indexing.
 const isProduction = (process.env.VERCEL_ENV || process.env.DEPLOYMENT_ENV) === "production";
@@ -48,8 +49,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      className={`${bowlbyOne.variable} ${figtree.variable} h-full antialiased`}>
+      className={`${bowlbyOne.variable} ${figtree.variable} h-full antialiased`}
+      // The inline script below marks the Hero layout on <html> before React hydrates.
+      suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: heroLayoutScript }} />
         {/* Keep URLs relative until the real production origin is configured.
             Next's image resolver otherwise supplies a deployment/localhost URL. */}
         {!productionURL && (

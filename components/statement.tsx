@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { anchors, copy } from "@/content/page";
 import type { StatementSequence } from "@/lib/statement-sequence";
+import { HandCutEdge } from "./brand";
 import { useMotion } from "./motion-provider";
 
 const { statement } = copy;
@@ -43,7 +44,8 @@ export function Statement() {
       id={anchors.statement}
       aria-labelledby="statement-heading"
       className="relative scroll-mt-4 bg-fibra bg-grain-dark text-polpa">
-      <HandCutEdge />
+      {/* In the Vitrine the Hero's Saída panel brings the cut, and this section runs on from it. */}
+      <HandCutEdge className="absolute inset-x-0 -top-[23px] h-6 w-full vitrine:hidden" />
       <div ref={pinned}>
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 sm:py-28">
           <h2
@@ -86,19 +88,5 @@ export function Statement() {
         </div>
       </div>
     </section>
-  );
-}
-
-/** The panel's uneven, hand-cut top edge. */
-function HandCutEdge() {
-  return (
-    <svg
-      viewBox="0 0 1200 24"
-      preserveAspectRatio="none"
-      className="absolute inset-x-0 -top-[23px] h-6 w-full fill-fibra"
-      aria-hidden="true"
-      focusable="false">
-      <path d="M0 24 L0 14 L140 9 L310 16 L470 6 L640 13 L820 4 L990 12 L1200 7 L1200 24 Z" />
-    </svg>
   );
 }

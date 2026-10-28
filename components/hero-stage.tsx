@@ -90,7 +90,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
   const events: HeroSceneEvents = {
     onFirstFrame: () => {
       // A visitor who has scrolled on keeps their place and skips the entrance.
-      if ((sequence.current?.unit() ?? 0) > 0) sequence.current?.skipEntrance();
+      if (sequence.current?.scrolledIn()) sequence.current.skipEntrance();
       loading.current?.firstFrame.resolve();
       setPhase("3d");
     },
@@ -108,22 +108,26 @@ export function HeroStage({ children }: { children: ReactNode }) {
   const showing3d = showScene && phase === "3d";
 
   return (
+    // In the Vitrine the stage covers the whole frame, with the object's square at its centre,
+    // so the scene can throw particles and the cap past the square's edges. On phones its
+    // centre sits slightly below the frame's (DESIGN.md § On phones: Estreita).
     <div
       ref={stage}
       data-hero-stage={showing3d ? "3d" : "poster"}
-      className="relative mx-auto aspect-square w-full max-w-sm md:w-sm xl:w-lg xl:max-w-lg">
-      <div ref={poster} className={`absolute inset-0 ${showing3d ? "invisible" : ""}`}>
+      className="relative mx-auto aspect-square w-full max-w-sm md:w-sm xl:w-lg xl:max-w-lg vitrine:pointer-events-none vitrine:absolute vitrine:inset-0 vitrine:z-10 vitrine:mx-0 vitrine:aspect-auto vitrine:w-auto vitrine:max-w-none max-sm:vitrine:-bottom-[8svh]">
+      <div
+        ref={poster}
+        data-hero-poster
+        // What stays in place when the Vitrine is released and the Hero is laid out as Static.
+        data-viewport-anchor
+        className={`absolute inset-0 vitrine:inset-auto vitrine:top-1/2 vitrine:left-1/2 vitrine:size-[min(32rem,64svh,50vw)] vitrine:-translate-1/2 max-sm:vitrine:size-[71vw] ${showing3d ? "invisible" : ""}`}>
         {children}
       </div>
       {showScene && (
         // Decorative: hidden from assistive technology and never focusable or hit by the pointer.
-        // The scene runs the viewport's full height over the stage, so the cap leaves the
-        // screen rather than clipping at the stage's edge.
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute inset-x-0 top-1/2 h-lvh -translate-y-1/2 ${showing3d ? "" : "opacity-0"}`}>
+        <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${showing3d ? "" : "opacity-0"}`}>
           <SceneBoundary onError={events.onFailure}>
-            <HeroScene rig={rig} tier={tier} {...events} />
+            <HeroScene rig={rig} tier={tier} frame={poster} {...events} />
           </SceneBoundary>
         </div>
       )}

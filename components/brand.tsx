@@ -64,6 +64,23 @@ export function BrushUnderline({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * The dark Fibra panel's uneven, hand-cut top edge. The `clip-hand-cut` utility in
+ * globals.css cuts the same line, for a panel whose grain must run up to it.
+ */
+export function HandCutEdge({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 1200 24"
+      preserveAspectRatio="none"
+      className={`fill-fibra ${className}`}
+      aria-hidden="true"
+      focusable="false">
+      <path d="M0 24 L0 14 L140 9 L310 16 L470 6 L640 13 L820 4 L990 12 L1200 7 L1200 24 Z" />
+    </svg>
+  );
+}
+
 /** Placeholder can render: a 350 ml can whose label takes the Flavour accent. */
 export function CanPlaceholder({ accent, className = "" }: { accent: string; className?: string }) {
   return (

@@ -68,12 +68,16 @@ test("Flavour grid Copy, with the disclosure beside the introduction", async ({ 
   await expectOnce(grid, copy.grid.intro);
   await expectOnce(grid, copy.grid.disclosure);
 
-  const intro = await grid.getByText(copy.grid.intro, { exact: true }).boundingBox();
-  const disclosure = await grid.getByText(copy.grid.disclosure, { exact: true }).boundingBox();
-  const cards = await grid.getByRole("list").boundingBox();
+  // Measured together: the pinned Hero and statement add their scroll while the page
+  // settles, and boxes read one at a time could straddle that.
+  const { intro, disclosure, cards } = await grid.evaluate((el, text) => {
+    const box = (node: Element) => node.getBoundingClientRect().toJSON() as DOMRect;
+    const byText = (value: string) => Array.from(el.querySelectorAll("*")).find((node) => node.textContent === value)!;
+    return { intro: box(byText(text.intro)), disclosure: box(byText(text.disclosure)), cards: box(el.querySelector("ul")!) };
+  }, copy.grid);
   // Next to the introduction: before the cards, and no further than a line below the intro.
-  expect(disclosure!.y).toBeLessThan(cards!.y);
-  expect(disclosure!.y).toBeLessThan(intro!.y + intro!.height + 40);
+  expect(disclosure.y).toBeLessThan(cards.y);
+  expect(disclosure.y).toBeLessThan(intro.y + intro.height + 40);
 });
 
 test("each Flavour card shows its name, descriptor, stats, size and default pack", async ({ page }) => {
