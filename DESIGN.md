@@ -263,6 +263,10 @@ Decided in [How do the rotating statement, Flavour cards, and Quick-add respond 
 
 ### Quick-add layout and state
 
+**Current UI:** the owner removed the “Escolher” buttons and pack pickers. Cards
+retain the illustrative single-can price as static text. The Quick-add notes
+below describe the previous interaction, retained as design history.
+
 - Expand the inline picker below the card's selected quantity/price and “Escolher” button, keeping product details visible. Use a Polpa inset board with Fibra text on desktop and phones.
 - Show “Quantas latas?”, three full-width stacked native radio rows with the approved complete quantity/price labels, “Só pra imaginar sua geladeira.” and “Fechar”. Controls have a minimum height of 44 px.
 - Reflow content immediately on expansion; in normal motion, fade the revealed content in over 180 ms using Tailwind/CSS. Static has no fade. Preserve the Accessibility policy's opening focus, selection, Escape/Fechar and single-announcement behavior.
@@ -321,7 +325,7 @@ Decided in [What does each Flavour's can label look like?](https://github.com/da
 
 - **One painted fruit per Flavour**, on the front roundel and repeated small on the side. Só o Coco gets a coconut half.
 - **Style**: the fruit on a juice-stand menu board. Flat fills, a thick Fibra outline, one highlight stroke, cut fruit shown in section where it reads better (maracujá, limão, goiaba), whole where the shape is the point (caju with its nut, an açaí cluster).
-- **Source**: paid-tier AI images we own the output of (ADR 0002), used as reference and repainted flat to the style above, so the six match.
+- **Source**: original SVG fruit drawings in `scripts/build-brand-assets.ts`, shared by the front and side of each generated label. No AI imagery was needed for #28; any future AI reference use still follows ADR 0002's paid-tier ownership rule.
 
 ### Known refinement
 

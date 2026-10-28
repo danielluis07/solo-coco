@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <!-- Barraca wrap template. Generated labels live in assets/flavours/. -->
+  <defs>
+    <style>
+      @font-face { font-family: "Bowlby One"; src: url("../hero/fonts/BowlbyOne-Regular.ttf"); }
+      @font-face { font-family: "Figtree"; src: url("../hero/fonts/Figtree-wght.ttf"); font-weight: 300 900; }
+      .display { font-family: "Bowlby One"; }
+      .body { font-family: "Figtree"; }
+    </style>
+    <!-- Painted-board grain at about 9% Fibra; stitched so it meets itself at the seam. -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+      <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 .227 0 0 0 0 .165 0 0 0 0 .114 0 0 0 .09 0" result="ink"/>
+      <feComposite in="ink" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <clipPath id="symbol-cut"><polygon points="0,100 0,0 54,0 100,34 100,100"/></clipPath>
+  </defs>
+
+  <!-- Husk: the top two-thirds of every can. -->
+  <rect width="2048" height="1024" fill="#7BA23F"/>
+  <!-- Flavour band below the machete cut; Só o Coco's band is Polpa. The cut tiles across the seam. -->
+  <path fill="#EE8FA0" d="M0,1024 L0,660 L64,686 L128,642 L192,694 L256,650 L320,682 L384,630 L448,674 L512,654 L576,690 L640,638 L704,678 L768,646 L832,688 L896,634 L960,670 L1024,660 L1088,686 L1152,642 L1216,694 L1280,650 L1344,682 L1408,630 L1472,674 L1536,654 L1600,690 L1664,638 L1728,678 L1792,646 L1856,688 L1920,634 L1984,670 L2048,660 L2048,1024 Z"/>
+  <path fill="none" stroke="#3A2A1D" stroke-width="8" stroke-linejoin="round" d="M-64,670 L0,660 L64,686 L128,642 L192,694 L256,650 L320,682 L384,630 L448,674 L512,654 L576,690 L640,638 L704,678 L768,646 L832,688 L896,634 L960,670 L1024,660 L1088,686 L1152,642 L1216,694 L1280,650 L1344,682 L1408,630 L1472,674 L1536,654 L1600,690 L1664,638 L1728,678 L1792,646 L1856,688 L1920,634 L1984,670 L2048,660 L2112,686"/>
+
+  <!-- Front (u = 0.25) -->
+  <!-- The symbol on the husk: a Casca funda coconut outlined in Fibra, so it never reads as a dark ball. -->
+  <path transform="translate(427 45) scale(1.7)" fill="#3A2A1D" d="M49 8C26 7 9 28 9 53C8 77 24 93 48 94C73 95 91 77 91 54L88 43L65 33L72 24L55 10Z"/>
+  <path transform="translate(192 225) scale(1.49)" fill="#3A2A1D" fill-rule="evenodd" d="M50 13C38 5 10 10 6 30C2 48 23 51 34 56C44 61 39 72 30 73C21 75 13 70 7 66L1 82C18 94 46 89 53 71C64 46 39 40 26 35C15 31 23 22 31 24L44 29Z M82 29C60 27 54 44 55 62C56 81 66 89 83 86C102 85 108 69 106 51C104 35 96 29 82 29Z M82 45C90 45 91 53 90 61C90 69 88 73 81 73C74 73 72 65 73 58C73 50 75 45 82 45Z M115 8L134 6L129 66Q128 72 139 69L138 84Q109 92 110 70Z M171 24C150 22 141 36 142 55C142 75 151 84 169 82C188 80 196 67 194 48C192 31 184 24 171 24Z M170 40C177 39 179 46 178 55C178 64 175 68 169 68C162 69 159 62 160 54C160 45 164 41 170 40Z M253 12C234 -2 205 5 199 31C191 61 202 83 226 82Q244 83 256 69L244 56C231 71 214 66 217 44C219 23 233 19 243 29Z M284 23C262 22 255 37 256 56C257 75 267 83 284 81C303 79 309 64 307 46C305 30 297 23 284 23Z M283 39C291 39 293 47 292 55C292 63 289 68 283 68C276 68 273 60 274 53C274 45 277 39 283 39Z M359 28Q338 12 320 33C307 50 313 76 332 80Q348 84 360 71L350 58Q337 72 331 58Q326 44 338 40Q345 38 350 44Z M395 26C373 24 364 40 365 59C366 78 376 86 393 84C412 82 420 67 418 49C416 33 408 26 395 26Z M394 42C402 42 404 50 403 58C403 66 400 71 394 71C387 71 382 63 383 56C383 48 387 42 394 42Z"/>
+  <text class="body" x="512" y="430" fill="#3A2A1D" font-size="38" font-weight="600" text-anchor="middle">Levemente gaseificado</text>
+  <!-- Polpa roundel across the cut, with the hard Fibra shadow. -->
+  <circle cx="524" cy="646" r="150" fill="#3A2A1D"/>
+  <circle cx="512" cy="630" r="150" fill="#FAFAF5" stroke="#3A2A1D" stroke-width="6"/>
+  <!-- Painted coconut half, juice-stand menu style. -->
+  <g transform="translate(387 505) scale(1.25)" stroke="#3A2A1D" stroke-width="5" stroke-linejoin="round">
+    <path d="M100 32C56 28 20 69 21 112C21 157 56 183 100 180C149 183 179 154 179 111C179 69 145 28 100 32Z" fill="#7BA23F"/><ellipse cx="100" cy="108" rx="65" ry="57" fill="#EE8FA0"/><path d="M80 88l2 4m22-10 2 4m20 12 2 4m-45 11 2 4m22-10 2 4m12 18 2 4m-27 0 2 4" stroke-width="6" stroke-linecap="round"/>
+    <path d="M64 86 Q78 70 95 68" stroke="#FAFAF5" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+  <text class="display" x="512" y="905" fill="#3A2A1D" font-size="96" text-anchor="middle" letter-spacing="-2"
+    transform="rotate(-1.5 512 905)">Goiaba</text>
+  <text class="body" x="512" y="975" fill="#3A2A1D" font-size="32" font-weight="700" text-anchor="middle">350 ml</text>
+
+  <!-- Side (u = 0.5): a smaller painted fruit on the band. -->
+  <g transform="translate(949 775) scale(.75)" stroke="#3A2A1D" stroke-width="5" stroke-linejoin="round"><path d="M100 32C56 28 20 69 21 112C21 157 56 183 100 180C149 183 179 154 179 111C179 69 145 28 100 32Z" fill="#7BA23F"/><ellipse cx="100" cy="108" rx="65" ry="57" fill="#EE8FA0"/><path d="M80 88l2 4m22-10 2 4m20 12 2 4m-45 11 2 4m22-10 2 4m12 18 2 4m-27 0 2 4" stroke-width="6" stroke-linecap="round"/></g>
+
+  <!-- Back (u = 0.75) -->
+  <text class="display" x="1536" y="200" fill="#3A2A1D" font-size="112" text-anchor="middle" letter-spacing="-2"
+    transform="rotate(-2 1536 200)">Só o coco.</text>
+  <text class="body" x="1536" y="330" fill="#3A2A1D" font-size="40" font-weight="500" text-anchor="middle">
+    <tspan x="1536">Coco e goiaba</tspan>
+    <tspan x="1536" dy="52">e gás carbônico.</tspan>
+    <tspan x="1536" dy="104">55 kcal e 7 g de açúcar</tspan>
+    <tspan x="1536" dy="52">por lata.</tspan>
+  </text>
+  <text class="body" x="1536" y="880" fill="#3A2A1D" font-size="36" font-weight="600" text-anchor="middle">
+    <tspan x="1536">350 ml</tspan>
+    <tspan x="1536" dy="47">Feito no Brasil, sem pressa.</tspan>
+  </text>
+
+  <!-- Grain over everything, baked into the texture. -->
+  <rect width="2048" height="1024" fill="#000" filter="url(#grain)"/>
+</svg>

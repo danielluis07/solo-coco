@@ -1,7 +1,6 @@
-// Rebuilds every Hero 3D asset from the committed sources in assets/hero/:
-// rasterises the can label, runs the Blender script (can, coconut, halves,
-// poster), optimises the GLBs with gltf-transform, encodes the label as KTX2,
-// copies the decoders and checks the ADR 0002 budgets.
+// Rebuilds Hero models, six labels and card renders, brand paths, sharing image
+// and icons from assets/hero/, assets/brand/ and scripts/build-brand-assets.ts.
+// Runs Blender, gltf-transform and KTX, and checks geometry, textures and cards.
 //
 //   bun run assets:hero
 //
@@ -14,7 +13,7 @@ import { join, resolve } from "node:path";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { MeshoptDecoder } from "meshoptimizer";
-import { chromium } from "@playwright/test";
+import { prepareBrandAssets, finishBrandAssets } from "./build-brand-assets";
 
 const root = resolve(import.meta.dir, "..");
 const source = join(root, "assets/hero");
@@ -47,16 +46,6 @@ async function run(cmd: string[]) {
   console.log(`$ ${cmd.join(" ")}`);
   const proc = Bun.spawn(cmd, { cwd: root, stdout: "inherit", stderr: "inherit" });
   if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} exited with ${proc.exitCode}`);
-}
-
-/** The label SVG in Chromium, so its @font-face fonts and grain filter render exactly. */
-async function rasteriseLabel(svg: string, png: string) {
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 2048, height: 1024 } });
-  await page.goto(`file:///${svg.replaceAll("\\", "/")}`);
-  await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: png, clip: { x: 0, y: 0, width: 2048, height: 1024 } });
-  await browser.close();
 }
 
 function checkTextureSize(name: string, w: number, h: number) {
@@ -106,7 +95,7 @@ await mkdir(work, { recursive: true });
 await mkdir(out, { recursive: true });
 
 const labelPng = join(work, "label-so-o-coco.png");
-await rasteriseLabel(join(source, "label-so-o-coco.svg"), labelPng);
+await prepareBrandAssets();
 
 await run([
   findBlender(),
@@ -182,4 +171,5 @@ for (const file of ["basis_transcoder.js", "basis_transcoder.wasm"]) {
 }
 
 await checkBudgets();
+await finishBrandAssets();
 console.log("Hero assets rebuilt in public/hero/.");

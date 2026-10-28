@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <!-- Barraca wrap template. Generated labels live in assets/flavours/. -->
+  <defs>
+    <style>
+      @font-face { font-family: "Bowlby One"; src: url("../hero/fonts/BowlbyOne-Regular.ttf"); }
+      @font-face { font-family: "Figtree"; src: url("../hero/fonts/Figtree-wght.ttf"); font-weight: 300 900; }
+      .display { font-family: "Bowlby One"; }
+      .body { font-family: "Figtree"; }
+    </style>
+    <!-- Painted-board grain at about 9% Fibra; stitched so it meets itself at the seam. -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse">
+      <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 .227 0 0 0 0 .165 0 0 0 0 .114 0 0 0 .09 0" result="ink"/>
+      <feComposite in="ink" in2="SourceGraphic" operator="in"/>
+    </filter>
+    <clipPath id="symbol-cut"><polygon points="0,100 0,0 54,0 100,34 100,100"/></clipPath>
+  </defs>
+
+  <!-- Husk: the top two-thirds of every can. -->
+  <rect width="2048" height="1024" fill="#7BA23F"/>
+  <!-- Flavour band below the machete cut; Só o Coco's band is Polpa. The cut tiles across the seam. -->
+  <path fill="{{band}}" d="M0,1024 L0,660 L64,686 L128,642 L192,694 L256,650 L320,682 L384,630 L448,674 L512,654 L576,690 L640,638 L704,678 L768,646 L832,688 L896,634 L960,670 L1024,660 L1088,686 L1152,642 L1216,694 L1280,650 L1344,682 L1408,630 L1472,674 L1536,654 L1600,690 L1664,638 L1728,678 L1792,646 L1856,688 L1920,634 L1984,670 L2048,660 L2048,1024 Z"/>
+  <path fill="none" stroke="#3A2A1D" stroke-width="8" stroke-linejoin="round" d="M-64,670 L0,660 L64,686 L128,642 L192,694 L256,650 L320,682 L384,630 L448,674 L512,654 L576,690 L640,638 L704,678 L768,646 L832,688 L896,634 L960,670 L1024,660 L1088,686 L1152,642 L1216,694 L1280,650 L1344,682 L1408,630 L1472,674 L1536,654 L1600,690 L1664,638 L1728,678 L1792,646 L1856,688 L1920,634 L1984,670 L2048,660 L2112,686"/>
+
+  <!-- Front (u = 0.25) -->
+  <!-- The symbol on the husk: a Casca funda coconut outlined in Fibra, so it never reads as a dark ball. -->
+  <path transform="translate(427 45) scale(1.7)" fill="#3A2A1D" d="{{symbol}}"/>
+  <path transform="translate(192 225) scale(1.49)" fill="#3A2A1D" fill-rule="evenodd" d="{{wordmark}}"/>
+  <text class="body" x="512" y="430" fill="#3A2A1D" font-size="38" font-weight="600" text-anchor="middle">Levemente gaseificado</text>
+  <!-- Polpa roundel across the cut, with the hard Fibra shadow. -->
+  <circle cx="524" cy="646" r="150" fill="#3A2A1D"/>
+  <circle cx="512" cy="630" r="150" fill="#FAFAF5" stroke="#3A2A1D" stroke-width="6"/>
+  <!-- Painted coconut half, juice-stand menu style. -->
+  <g transform="translate(387 505) scale(1.25)" stroke="#3A2A1D" stroke-width="5" stroke-linejoin="round">
+    {{fruit}}
+    <path d="M64 86 Q78 70 95 68" stroke="#FAFAF5" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+  <text class="display" x="512" y="905" fill="{{ink}}" font-size="96" text-anchor="middle" letter-spacing="-2"
+    transform="rotate(-1.5 512 905)">{{name}}</text>
+  <text class="body" x="512" y="975" fill="{{ink}}" font-size="32" font-weight="700" text-anchor="middle">350 ml</text>
+
+  <!-- Side (u = 0.5): a smaller painted fruit on the band. -->
+  <g transform="translate(949 775) scale(.75)" stroke="#3A2A1D" stroke-width="5" stroke-linejoin="round">{{fruit}}</g>
+
+  <!-- Back (u = 0.75) -->
+  <text class="display" x="1536" y="200" fill="#3A2A1D" font-size="112" text-anchor="middle" letter-spacing="-2"
+    transform="rotate(-2 1536 200)">Só o coco.</text>
+  <text class="body" x="1536" y="330" fill="#3A2A1D" font-size="40" font-weight="500" text-anchor="middle">
+    <tspan x="1536">{{ingredients}}</tspan>
+    <tspan x="1536" dy="52">e gás carbônico.</tspan>
+    <tspan x="1536" dy="104">{{stats}}</tspan>
+    <tspan x="1536" dy="52">por lata.</tspan>
+  </text>
+  <text class="body" x="1536" y="880" fill="{{ink}}" font-size="36" font-weight="600" text-anchor="middle">
+    <tspan x="1536">350 ml</tspan>
+    <tspan x="1536" dy="47">Feito no Brasil, sem pressa.</tspan>
+  </text>
+
+  <!-- Grain over everything, baked into the texture. -->
+  <rect width="2048" height="1024" fill="#000" filter="url(#grain)"/>
+</svg>
