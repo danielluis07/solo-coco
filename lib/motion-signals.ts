@@ -7,7 +7,7 @@ import type { DeviceClass, MotionInputs } from "./motion-tier";
 export const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 
 /** Below Tailwind's `sm` breakpoint the page is laid out for portrait phones. */
-const phoneQuery = "(max-width: 639.98px)";
+export const phoneQuery = "(max-width: 639.98px)";
 
 // Visit-scoped: the choice lasts for this tab's visit and no longer.
 const optOutKey = "solococo:motion-opt-out";

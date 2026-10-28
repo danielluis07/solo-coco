@@ -20,7 +20,7 @@ function findOverflow(page: Page) {
       `${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 40)}"`;
 
     for (const el of document.body.querySelectorAll<HTMLElement>("*")) {
-      if (el.closest("svg") || el.classList.contains("sr-only")) continue;
+      if (el.closest("svg, .sr-only")) continue;
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
       if (rect.left < -1 || rect.right > vw + 1) {

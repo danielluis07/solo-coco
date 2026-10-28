@@ -75,15 +75,17 @@ test("turning on reduced motion mid-visit switches to Static and keeps focus and
     .getByRole("button", { name: copy.quickAdd.open, exact: true });
   await opener.focus();
   await expect(opener).toBeInViewport();
-  const before = await page.evaluate(() => window.scrollY);
-  expect(before).toBeGreaterThan(0);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  // Releasing the statement pin shortens the page above, so the opener's place
+  // in the viewport is what stays, not the scroll offset.
+  const before = (await opener.boundingBox())!.y;
 
   await page.emulateMedia({ reducedMotion: "reduce" });
 
   await expectTier(page, "static");
   await expect(html(page)).not.toHaveClass(/\blenis\b/);
   await expect(opener).toBeFocused();
-  expect(Math.abs((await page.evaluate(() => window.scrollY)) - before)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await opener.boundingBox())!.y - before)).toBeLessThanOrEqual(1);
 });
 
 const anchorLinks = (page: Page): [string, Locator, string][] => {
